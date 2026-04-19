@@ -1,6 +1,6 @@
 // WorkSpace.kz — Auth Manager (LocalStorage + IndexedDB)
 
-class AuthManager {
+class _AuthManager {
   constructor() {
     this.tokenKey = 'ws_token';
     this.currentUser = this._loadUser();
@@ -70,12 +70,12 @@ class AuthManager {
 }
 
 // Global singleton
-window.AuthManager = new AuthManager();
+window.AuthManager = new _AuthManager();
 
 // Keep currentUser fresh across tabs
 window.addEventListener('storage', (e) => {
-  if (e.key === AuthManager.tokenKey) {
-    AuthManager.currentUser = AuthManager._loadUser();
-    if (typeof updateNavbar === 'function') updateNavbar(AuthManager.currentUser);
+  if (e.key === window.AuthManager.tokenKey) {
+    window.AuthManager.currentUser = window.AuthManager._loadUser();
+    if (typeof updateNavbar === 'function') updateNavbar(window.AuthManager.currentUser);
   }
 });

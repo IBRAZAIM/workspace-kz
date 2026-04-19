@@ -864,11 +864,8 @@ const Bookings = (() => {
 
 // ─── INIT ─────────────────────────────────────────────────────────
 async function init() {
-  // Wait for AuthManager to finish init
-  if (typeof AuthManager !== 'undefined' && AuthManager.ready) {
-    await AuthManager.ready;
-  }
-
+  await WorkSpaceDB.dbReady;
+  
   if (!AuthManager.isLoggedIn()) { window.location.href='login.html'; return; }
   const user=AuthManager.getUser();
   if (user.role!=='admin') { window.location.href='dashboard.html'; return; }
