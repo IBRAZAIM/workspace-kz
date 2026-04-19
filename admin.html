@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ — WorkSpace.kz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:#0D0D0F; --bg2:#141417; --bg3:#1A1A1F; --bg4:#222228;
+      --bd:#2A2A32; --tx:#F0F0F5; --tx2:#888898; --tx3:#555565;
+      --accent:#A8FF57; --accent2:#5C8AFF;
+      --err:#FF5757; --warn:#FFB347; --ok:#57E5A8;
+      --r:12px; --r-sm:8px;
+    }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; display:flex; flex-direction:column; }
+
+    /* HEADER */
+    header { display:flex; align-items:center; justify-content:space-between; padding:0 2rem; height:60px; background:var(--bg2); border-bottom:1px solid var(--bd); position:sticky; top:0; z-index:100; }
+    .logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.25rem; color:var(--tx); text-decoration:none; }
+    .logo span { color:var(--accent); }
+    .admin-badge { background:rgba(168,255,87,0.12); color:var(--accent); font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:20px; letter-spacing:0.05em; text-transform:uppercase; border:1px solid rgba(168,255,87,0.25); }
+    .header-right { display:flex; align-items:center; gap:1rem; }
+    .header-back { color:var(--tx2); text-decoration:none; font-size:0.85rem; transition:color 0.2s; }
+    .header-back:hover { color:var(--accent); }
+
+    /* LAYOUT */
+    .shell { display:flex; flex:1; }
+
+    /* SIDEBAR */
+    .sidebar { width:220px; background:var(--bg2); border-right:1px solid var(--bd); padding:1.5rem 1rem; display:flex; flex-direction:column; gap:0.25rem; flex-shrink:0; }
+    .sidebar-label { font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--tx3); padding:0.5rem 0.75rem 0.25rem; }
+    .nav-item { display:flex; align-items:center; gap:0.65rem; padding:0.6rem 0.75rem; border-radius:var(--r-sm); color:var(--tx2); cursor:pointer; font-size:0.88rem; font-weight:500; transition:all 0.15s; border:none; background:transparent; width:100%; text-align:left; }
+    .nav-item:hover { background:var(--bg3); color:var(--tx); }
+    .nav-item.active { background:rgba(168,255,87,0.1); color:var(--accent); }
+    .nav-item .icon { font-size:1rem; flex-shrink:0; }
+    .nav-count { margin-left:auto; background:var(--bg4); color:var(--tx2); font-size:0.72rem; padding:0.1rem 0.45rem; border-radius:10px; }
+    .nav-item.active .nav-count { background:rgba(168,255,87,0.15); color:var(--accent); }
+
+    /* MAIN */
+    .main { flex:1; padding:2rem; overflow-y:auto; }
+    .page-title { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; margin-bottom:1.5rem; }
+
+    /* STATS */
+    .stats-bar { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin-bottom:2rem; }
+    .stat-card { background:var(--bg2); border:1px solid var(--bd); border-radius:var(--r); padding:1.25rem 1.5rem; }
+    .stat-label { font-size:0.78rem; color:var(--tx2); margin-bottom:0.35rem; }
+    .stat-value { font-family:'Syne',sans-serif; font-size:2rem; font-weight:800; }
+    .stat-value.green { color:var(--accent); }
+    .stat-value.blue  { color:var(--accent2); }
+    .stat-value.warn  { color:var(--warn); }
+
+    /* TABLE CARD */
+    .table-card { background:var(--bg2); border:1px solid var(--bd); border-radius:var(--r); overflow:hidden; }
+    .table-toolbar { display:flex; align-items:center; gap:0.75rem; padding:1rem 1.25rem; border-bottom:1px solid var(--bd); flex-wrap:wrap; }
+    .search-box { flex:1; min-width:180px; background:var(--bg3); border:1px solid var(--bd); border-radius:var(--r-sm); padding:0.5rem 0.85rem; color:var(--tx); font-size:0.88rem; font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s; }
+    .search-box:focus { border-color:var(--accent); }
+    .search-box::placeholder { color:var(--tx3); }
+    .filter-select { background:var(--bg3); border:1px solid var(--bd); border-radius:var(--r-sm); padding:0.5rem 0.75rem; color:var(--tx); font-size:0.85rem; font-family:'DM Sans',sans-serif; outline:none; cursor:pointer; }
+    .filter-select:focus { border-color:var(--accent); }
+
+    .btn { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:var(--r-sm); font-size:0.85rem; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:all 0.15s; white-space:nowrap; }
+    .btn-green  { background:var(--accent); color:#0D0D0F; }
+    .btn-green:hover  { background:#c0ff77; }
+    .btn-ghost  { background:var(--bg4); color:var(--tx2); border:1px solid var(--bd); }
+    .btn-ghost:hover  { color:var(--tx); border-color:var(--tx3); }
+    .btn-danger { background:rgba(255,87,87,0.12); color:var(--err); border:1px solid rgba(255,87,87,0.25); }
+    .btn-danger:hover { background:rgba(255,87,87,0.22); }
+    .btn-sm { padding:0.3rem 0.65rem; font-size:0.78rem; }
+    .btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    table { width:100%; border-collapse:collapse; }
+    thead tr { border-bottom:1px solid var(--bd); }
+    th { padding:0.75rem 1rem; text-align:left; font-size:0.72rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--tx3); }
+    td { padding:0.8rem 1rem; font-size:0.88rem; border-bottom:1px solid rgba(42,42,50,0.6); vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:rgba(255,255,255,0.015); }
+
+    .avatar-sm { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,var(--accent),#5C8AFF); display:inline-flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:800; color:#0D0D0F; flex-shrink:0; }
+    .user-cell { display:flex; align-items:center; gap:0.65rem; }
+    .user-email { font-size:0.78rem; color:var(--tx2); }
+
+    .badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.72rem; font-weight:700; }
+    .badge-landlord { background:rgba(92,138,255,0.15); color:var(--accent2); }
+    .badge-tenant   { background:rgba(87,229,168,0.15); color:var(--ok); }
+    .badge-admin    { background:rgba(168,255,87,0.15); color:var(--accent); }
+    .badge-active   { background:rgba(87,229,168,0.12); color:var(--ok); }
+    .badge-inactive { background:rgba(255,87,87,0.12); color:var(--err); }
+    .badge-pending  { background:rgba(255,179,71,0.15); color:var(--warn); }
+    .badge-confirmed{ background:rgba(92,138,255,0.15); color:var(--accent2); }
+    .badge-cancelled{ background:rgba(255,87,87,0.12); color:var(--err); }
+
+    .actions { display:flex; gap:0.4rem; }
+
+    /* PAGINATION */
+    .pagination { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-top:1px solid var(--bd); font-size:0.83rem; color:var(--tx2); }
+    .page-btns { display:flex; gap:0.35rem; }
+    .page-btn { width:30px; height:30px; border-radius:6px; background:var(--bg3); border:1px solid var(--bd); color:var(--tx2); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.83rem; transition:all 0.15s; }
+    .page-btn:hover { border-color:var(--accent); color:var(--accent); }
+    .page-btn.active { background:rgba(168,255,87,0.12); border-color:var(--accent); color:var(--accent); }
+
+    /* MODAL */
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px); z-index:200; display:flex; align-items:center; justify-content:center; padding:1rem; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal { background:var(--bg2); border:1px solid var(--bd); border-radius:var(--r); padding:2rem; width:100%; max-width:500px; transform:translateY(20px); transition:transform 0.2s; max-height:90vh; overflow-y:auto; }
+    .modal-overlay.open .modal { transform:translateY(0); }
+    .modal-title { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:800; margin-bottom:1.5rem; }
+    .field-group { display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1rem; }
+    .field-label { font-size:0.8rem; font-weight:600; color:var(--tx2); }
+    .field { background:var(--bg3); border:1px solid var(--bd); border-radius:var(--r-sm); padding:0.6rem 0.85rem; color:var(--tx); font-size:0.88rem; font-family:'DM Sans',sans-serif; outline:none; transition:border-color 0.2s; width:100%; }
+    .field:focus { border-color:var(--accent); }
+    .field.error { border-color:var(--err); }
+    select.field { cursor:pointer; }
+    .modal-actions { display:flex; gap:0.75rem; margin-top:1.5rem; }
+
+    /* CONFIRM */
+    .confirm-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:300; display:flex; align-items:center; justify-content:center; padding:1rem; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+    .confirm-overlay.open { opacity:1; pointer-events:all; }
+    .confirm-box { background:var(--bg2); border:1px solid rgba(255,87,87,0.3); border-radius:var(--r); padding:2rem; max-width:380px; width:100%; text-align:center; transform:scale(0.95); transition:transform 0.2s; }
+    .confirm-overlay.open .confirm-box { transform:scale(1); }
+    .confirm-icon { font-size:2.5rem; margin-bottom:0.75rem; }
+    .confirm-title { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; margin-bottom:0.5rem; }
+    .confirm-text { font-size:0.88rem; color:var(--tx2); margin-bottom:1.5rem; }
+    .confirm-actions { display:flex; gap:0.75rem; justify-content:center; }
+
+    /* TOAST */
+    .toast { position:fixed; bottom:2rem; right:2rem; z-index:400; padding:0.75rem 1.25rem; border-radius:var(--r-sm); font-size:0.88rem; font-weight:500; opacity:0; transform:translateY(10px); transition:all 0.3s; pointer-events:none; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .toast.success { background:rgba(87,229,168,0.15); border:1px solid var(--ok); color:var(--ok); }
+    .toast.error   { background:rgba(255,87,87,0.15); border:1px solid var(--err); color:var(--err); }
+
+    /* SKELETON */
+    .skel { height:16px; border-radius:4px; background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ERROR BANNER */
+    .error-banner { background:rgba(255,87,87,0.08); border:1px solid rgba(255,87,87,0.25); border-radius:var(--r-sm); padding:1rem 1.25rem; color:var(--err); font-size:0.88rem; display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; }
+
+    .section { display:none; }
+    .section.active { display:block; }
+    .empty-state { text-align:center; padding:3rem; color:var(--tx3); font-size:0.88rem; }
+    .empty-state .empty-icon { font-size:2rem; margin-bottom:0.5rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+    <span class="admin-badge">Admin</span>
+  </div>
+  <div class="header-right">
+    <span id="headerUser" style="font-size:0.85rem;color:var(--tx2);"></span>
+    <a href="index.html" class="header-back">Главная</a>
+    <a href="profile.html" class="header-back">Профиль</a>
+    <a href="#" onclick="AuthManager.logout();return false" class="header-back">Выход</a>
+  </div>
+</header>
+
+<div class="shell">
+  <nav class="sidebar">
+    <span class="sidebar-label">Разделы</span>
+    <button class="nav-item active" onclick="switchTab('users',this)">
+      <span class="icon">👤</span> Пользователи
+      <span class="nav-count" id="cnt-users">—</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('rooms',this)">
+      <span class="icon">🏢</span> Пространства
+      <span class="nav-count" id="cnt-rooms">—</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('bookings',this)">
+      <span class="icon">📅</span> Брони
+      <span class="nav-count" id="cnt-bookings">—</span>
+    </button>
+  </nav>
+
+  <main class="main">
+    <div id="globalError" class="error-banner" style="display:none;">
+      ⚠️ <span id="globalErrorText"></span>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-card"><div class="stat-label">Пользователи</div><div class="stat-value green" id="stat-users">—</div></div>
+      <div class="stat-card"><div class="stat-label">Пространства</div><div class="stat-value blue"  id="stat-rooms">—</div></div>
+      <div class="stat-card"><div class="stat-label">Брони</div>       <div class="stat-value"        id="stat-bookings">—</div></div>
+      <div class="stat-card"><div class="stat-label">Ожидают</div>     <div class="stat-value warn"   id="stat-pending">—</div></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="section active" id="tab-users">
+      <div class="page-title">👤 Пользователи</div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input class="search-box" placeholder="Поиск по имени или email…" oninput="Users.filter(this.value)">
+          <select class="filter-select" onchange="Users.filterRole(this.value)">
+            <option value="">Все роли</option>
+            <option value="tenant">Арендатор</option>
+            <option value="landlord">Арендодатель</option>
+            <option value="admin">Администратор</option>
+          </select>
+          <button class="btn btn-green" onclick="Users.openCreate()">+ Добавить</button>
+        </div>
+        <table><thead><tr>
+          <th>Пользователь</th><th>Роль</th><th>Телефон</th><th>Регистрация</th><th>Действия</th>
+        </tr></thead><tbody id="usersBody"></tbody></table>
+        <div id="users-empty" class="empty-state" style="display:none;"><div class="empty-icon">👤</div>Нет пользователей</div>
+        <div class="pagination"><span id="users-info"></span><div class="page-btns" id="users-pages"></div></div>
+      </div>
+    </div>
+
+    <!-- ROOMS -->
+    <div class="section" id="tab-rooms">
+      <div class="page-title">🏢 Пространства</div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input class="search-box" placeholder="Поиск по названию или адресу…" oninput="Rooms.filter(this.value)">
+          <select class="filter-select" onchange="Rooms.filterStatus(this.value)">
+            <option value="">Все статусы</option>
+            <option value="active">Активные</option>
+            <option value="inactive">Неактивные</option>
+          </select>
+          <button class="btn btn-green" onclick="Rooms.openCreate()">+ Добавить</button>
+        </div>
+        <table><thead><tr>
+          <th>Название</th><th>Адрес</th><th>Тип</th><th>Цена/ч</th><th>Статус</th><th>Действия</th>
+        </tr></thead><tbody id="roomsBody"></tbody></table>
+        <div id="rooms-empty" class="empty-state" style="display:none;"><div class="empty-icon">🏢</div>Нет пространств</div>
+        <div class="pagination"><span id="rooms-info"></span><div class="page-btns" id="rooms-pages"></div></div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="section" id="tab-bookings">
+      <div class="page-title">📅 Брони</div>
+      <div class="table-card">
+        <div class="table-toolbar">
+          <input class="search-box" placeholder="Поиск по пользователю или пространству…" oninput="Bookings.filter(this.value)">
+          <select class="filter-select" onchange="Bookings.filterStatus(this.value)">
+            <option value="">Все статусы</option>
+            <option value="pending">Ожидание</option>
+            <option value="confirmed">Подтверждено</option>
+            <option value="cancelled">Отменено</option>
+          </select>
+          <button class="btn btn-green" onclick="Bookings.openCreate()">+ Добавить</button>
+        </div>
+        <table><thead><tr>
+          <th>Пользователь</th><th>Пространство</th><th>Дата / Слоты</th><th>Статус</th><th>Действия</th>
+        </tr></thead><tbody id="bookingsBody"></tbody></table>
+        <div id="bookings-empty" class="empty-state" style="display:none;"><div class="empty-icon">📅</div>Нет броней</div>
+        <div class="pagination"><span id="bookings-info"></span><div class="page-btns" id="bookings-pages"></div></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: User -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <div class="modal-title" id="userModalTitle">Добавить пользователя</div>
+    <div class="field-group"><label class="field-label">Имя *</label><input class="field" id="u-name" placeholder="Иван Иванов"></div>
+    <div class="field-group"><label class="field-label">Email *</label><input class="field" id="u-email" type="email" placeholder="ivan@example.com"></div>
+    <div class="field-group"><label class="field-label">Телефон</label><input class="field" id="u-phone" placeholder="+7 777 000 0000"></div>
+    <div class="field-group"><label class="field-label">Роль *</label>
+      <select class="field" id="u-role">
+        <option value="tenant">Арендатор</option>
+        <option value="landlord">Арендодатель</option>
+        <option value="admin">Администратор</option>
+      </select>
+    </div>
+    <div class="field-group" id="u-pass-group">
+      <label class="field-label">Пароль * <span style="color:var(--tx3);font-weight:400;">(мин. 8 символов)</span></label>
+      <input class="field" id="u-password" type="password" placeholder="••••••••">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" id="userSaveBtn" onclick="Users.submit()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="closeModal('userModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Room -->
+<div class="modal-overlay" id="roomModal">
+  <div class="modal">
+    <div class="modal-title" id="roomModalTitle">Добавить пространство</div>
+    <div class="field-group"><label class="field-label">Название *</label><input class="field" id="r-name" placeholder="Коворкинг Central"></div>
+    <div class="field-group"><label class="field-label">Адрес</label><input class="field" id="r-address" placeholder="г. Алматы, ул. Абая 10"></div>
+    <div class="field-group"><label class="field-label">Тип</label>
+      <select class="field" id="r-type">
+        <option value="coworking">Коворкинг</option>
+        <option value="office">Офис</option>
+        <option value="meeting">Переговорная</option>
+        <option value="event">Мероприятие</option>
+      </select>
+    </div>
+    <div class="field-group"><label class="field-label">Цена за час (₸)</label><input class="field" id="r-price" type="number" min="0" placeholder="1500"></div>
+    <div class="field-group"><label class="field-label">Вместимость</label><input class="field" id="r-capacity" type="number" min="1" placeholder="10"></div>
+    <div class="field-group"><label class="field-label">URL изображения</label><input class="field" id="r-img" placeholder="https://example.com/image.jpg"></div>
+    <div class="field-group"><label class="field-label">Описание</label><textarea class="field" id="r-description" rows="3" placeholder="Описание…" style="resize:vertical;"></textarea></div>
+    <div class="field-group"><label class="field-label">Статус</label>
+      <select class="field" id="r-status">
+        <option value="active">Активное</option>
+        <option value="inactive">Неактивное</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" id="roomSaveBtn" onclick="Rooms.submit()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="closeModal('roomModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Booking -->
+<div class="modal-overlay" id="bookingModal">
+  <div class="modal">
+    <div class="modal-title" id="bookingModalTitle">Добавить бронь</div>
+    <div class="field-group"><label class="field-label">Пользователь *</label><select class="field" id="b-user"></select></div>
+    <div class="field-group"><label class="field-label">Пространство *</label><select class="field" id="b-room"></select></div>
+    <div class="field-group"><label class="field-label">Дата *</label><input class="field" id="b-date" type="date"></div>
+    <div class="field-group">
+      <label class="field-label">Слоты (через запятую)</label>
+      <input class="field" id="b-slots" placeholder="09:00,10:00,11:00">
+    </div>
+    <div class="field-group"><label class="field-label">Статус</label>
+      <select class="field" id="b-status">
+        <option value="pending">Ожидание</option>
+        <option value="confirmed">Подтверждено</option>
+        <option value="cancelled">Отменено</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-green" id="bookingSaveBtn" onclick="Bookings.submit()">Сохранить</button>
+      <button class="btn btn-ghost" onclick="closeModal('bookingModal')">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">🗑️</div>
+    <div class="confirm-title">Удалить запись?</div>
+    <div class="confirm-text" id="confirmText">Это действие нельзя отменить.</div>
+    <div class="confirm-actions">
+      <button class="btn btn-danger" id="confirmBtn" onclick="Confirm.execute()">Удалить</button>
+      <button class="btn btn-ghost" onclick="Confirm.close()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="api.js"></script>
+<script src="auth.js"></script>
+<script>
+'use strict';
+
+// ─── HELPERS ────────────────────────────────────────────────────
+const ROWS = 10;
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function showGlobalError(msg) {
+  document.getElementById('globalErrorText').textContent = msg;
+  document.getElementById('globalError').style.display = 'flex';
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('ru-RU', { day:'numeric', month:'short', year:'numeric' });
+}
+
+function roleBadge(role) {
+  const map = { landlord:['badge-landlord','🏢 Арендодатель'], tenant:['badge-tenant','🔑 Арендатор'], admin:['badge-admin','⭐ Админ'] };
+  const [cls, txt] = map[role] || ['', role];
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+function statusBadge(status) {
+  const map = {
+    active:   ['badge-active',   '● Активное'],    inactive: ['badge-inactive','○ Неактивное'],
+    pending:  ['badge-pending',  '⏳ Ожидание'],   confirmed:['badge-confirmed','✓ Подтверждено'],
+    cancelled:['badge-cancelled','✕ Отменено'],
+  };
+  const [cls, txt] = map[status] || ['', status];
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+function roomTypeName(t) {
+  return { coworking:'Коворкинг', office:'Офис', meeting:'Переговорная', event:'Мероприятие' }[t] || t || '—';
+}
+
+function skeletonRows(tbodyId, cols) {
+  document.getElementById(tbodyId).innerHTML = Array.from({length:5}, () =>
+    `<tr>${Array.from({length:cols}, () => `<td><div class="skel" style="width:${60+Math.random()*30}%"></div></td>`).join('')}</tr>`
+  ).join('');
+}
+
+function renderPages(arr, page, infoId, pagesId, renderFn) {
+  const total = arr.length;
+  const totalPages = Math.max(1, Math.ceil(total / ROWS));
+  const p = Math.min(page, totalPages);
+  const slice = arr.slice((p-1)*ROWS, p*ROWS);
+  document.getElementById(infoId).textContent = total
+    ? `${(p-1)*ROWS+1}–${Math.min(p*ROWS,total)} из ${total}` : '0 записей';
+  const pb = document.getElementById(pagesId);
+  pb.innerHTML = '';
+  for (let i = 1; i <= totalPages; i++) {
+    const b = document.createElement('button');
+    b.className = 'page-btn' + (i===p?' active':'');
+    b.textContent = i;
+    b.onclick = () => renderFn(i);
+    pb.appendChild(b);
+  }
+  return { slice, page: p };
+}
+
+function setBusy(btnId, busy, label='Сохранить') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = busy;
+  btn.textContent = busy ? 'Сохранение…' : label;
+}
+
+// ─── TABS ────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── MODALS ──────────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov =>
+  ov.addEventListener('click', e => { if (e.target===ov) closeModal(ov.id); })
+);
+document.getElementById('confirmOverlay').addEventListener('click', e => {
+  if (e.target===document.getElementById('confirmOverlay')) Confirm.close();
+});
+
+// ─── CONFIRM ─────────────────────────────────────────────────────
+const Confirm = {
+  _cb: null,
+  ask(text, cb) {
+    this._cb = cb;
+    document.getElementById('confirmText').textContent = text;
+    document.getElementById('confirmOverlay').classList.add('open');
+  },
+  close() { this._cb=null; document.getElementById('confirmOverlay').classList.remove('open'); },
+  async execute() {
+    if (!this._cb) return;
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled=true; btn.textContent='Удаление…';
+    try { await this._cb(); }
+    catch(e) { toast(e.message,'error'); }
+    finally { btn.disabled=false; btn.textContent='Удалить'; this.close(); }
+  },
+};
+
+// ─── STATS ───────────────────────────────────────────────────────
+function updateStats(stats) {
+  if (Array.isArray(stats)) {
+    // Legacy support if called with arrays (though we'll use the stats object)
+    return;
+  }
+  document.getElementById('stat-users').textContent    = stats.users ?? '0';
+  document.getElementById('stat-rooms').textContent    = stats.rooms ?? '0';
+  document.getElementById('stat-bookings').textContent = stats.bookings ?? '0';
+  document.getElementById('stat-pending').textContent  = stats.pending ?? '0';
+  
+  document.getElementById('cnt-users').textContent    = stats.users ?? '0';
+  document.getElementById('cnt-rooms').textContent    = stats.rooms ?? '0';
+  document.getElementById('cnt-bookings').textContent = stats.bookings ?? '0';
+}
+
+// ─── USERS ───────────────────────────────────────────────────────
+const Users = (() => {
+  let _all=[], _page=1, _q='', _role='', _editId=null;
+
+  function filtered() {
+    return _all.filter(u => {
+      const q = _q.toLowerCase();
+      return (!q || u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q))
+          && (!_role || u.role===_role);
+    });
+  }
+
+  function render(page=_page) {
+    _page = page;
+    const arr = filtered();
+    const {slice} = renderPages(arr, page, 'users-info', 'users-pages', render);
+    const empty = document.getElementById('users-empty');
+    const tbody = document.getElementById('usersBody');
+    if (!arr.length) { tbody.innerHTML=''; empty.style.display=''; return; }
+    empty.style.display='none';
+    tbody.innerHTML = slice.map(u => `
+      <tr>
+        <td><div class="user-cell">
+          <div class="avatar-sm">${(u.name||'?')[0].toUpperCase()}</div>
+          <div><div>${u.name||'—'}</div><div class="user-email">${u.email||''}</div></div>
+        </div></td>
+        <td>${roleBadge(u.role)}</td>
+        <td style="color:var(--tx2)">${u.phone||'—'}</td>
+        <td style="color:var(--tx2)">${fmtDate(u.created_at||u.joined)}</td>
+        <td><div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="Users.openEdit('${u.email}')">✏️ Ред.</button>
+          <button class="btn btn-danger btn-sm" onclick="Users.askDelete('${u.email}','${(u.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  async function load() {
+    skeletonRows('usersBody', 5);
+    try {
+      _all = await window.api.adminGetUsers();
+      render(1);
+    } catch(e) {
+      document.getElementById('usersBody').innerHTML='';
+      showGlobalError('Пользователи: '+e.message);
+    }
+  }
+
+  function openCreate() {
+    _editId=null;
+    document.getElementById('userModalTitle').textContent='+ Добавить пользователя';
+    ['u-name','u-email','u-phone','u-password'].forEach(id => { document.getElementById(id).value=''; document.getElementById(id).classList.remove('error'); });
+    document.getElementById('u-role').value='tenant';
+    document.getElementById('u-pass-group').style.display='';
+    openModal('userModal');
+  }
+
+  function openEdit(email) {
+    const u = _all.find(x=>x.email===email); if (!u) return;
+    _editId=email;
+    document.getElementById('userModalTitle').textContent='✏️ Редактировать пользователя';
+    document.getElementById('u-name').value  = u.name  ||'';
+    document.getElementById('u-email').value = u.email ||'';
+    document.getElementById('u-phone').value = u.phone ||'';
+    document.getElementById('u-role').value  = u.role  ||'tenant';
+    document.getElementById('u-password').value='';
+    document.getElementById('u-pass-group').style.display='none';
+    ['u-name','u-email'].forEach(id=>document.getElementById(id).classList.remove('error'));
+    openModal('userModal');
+  }
+
+  async function submit() {
+    const name=document.getElementById('u-name').value.trim();
+    const email=document.getElementById('u-email').value.trim();
+    const phone=document.getElementById('u-phone').value.trim();
+    const role=document.getElementById('u-role').value;
+    const password=document.getElementById('u-password').value;
+    let ok=true;
+    ['u-name','u-email'].forEach(id=>document.getElementById(id).classList.remove('error'));
+    if (!name)  { document.getElementById('u-name').classList.add('error');  ok=false; }
+    if (!email) { document.getElementById('u-email').classList.add('error'); ok=false; }
+    if (!_editId && password.length<8) { toast('Пароль минимум 8 символов','error'); ok=false; }
+    if (!ok) return;
+
+    setBusy('userSaveBtn',true);
+    try {
+      if (_editId) {
+        const updated = await window.api.adminUpdateUser(_editId,{name,email,phone,role});
+        const i=_all.findIndex(x=>x.email===_editId); if (i!==-1) _all[i]={..._all[i],...updated};
+        toast('Пользователь обновлён');
+      } else {
+        const created = await window.api.adminCreateUser({name,email,phone,password,role});
+        _all.unshift(created);
+        toast('Пользователь добавлен');
+      }
+      closeModal('userModal'); render(1);
+    } catch(e) { toast(e.message,'error'); }
+    finally { setBusy('userSaveBtn',false); }
+  }
+
+  function askDelete(email, name) {
+    Confirm.ask(`Удалить пользователя «${name}»? Это действие нельзя отменить.`, async()=>{
+      await window.api.adminDeleteUser(email);
+      _all=_all.filter(x=>x.email!==email); render(1);
+      toast('Пользователь удалён');
+    });
+  }
+
+  return { load, render, submit, openCreate, openEdit, askDelete,
+    filter: q=>{ _q=q; render(1); }, filterRole: r=>{ _role=r; render(1); },
+    get all(){ return _all; } };
+})();
+
+// ─── ROOMS ───────────────────────────────────────────────────────
+const Rooms = (() => {
+  let _all=[], _page=1, _q='', _status='', _editId=null, _editOwner=null, _editAmenities=[];
+
+  function filtered() {
+    return _all.filter(r => {
+      const q=_q.toLowerCase();
+      const title = (r.title || '').toLowerCase();
+      const city = (r.city || '').toLowerCase();
+      return (!q || title.includes(q) || city.includes(q))
+          && (!_status || r.status===_status);
+    });
+  }
+
+  function render(page=_page) {
+    _page=page;
+    const arr=filtered();
+    const {slice}=renderPages(arr,page,'rooms-info','rooms-pages',render);
+    const empty=document.getElementById('rooms-empty');
+    const tbody=document.getElementById('roomsBody');
+    if (!arr.length){ tbody.innerHTML=''; empty.style.display=''; return; }
+    empty.style.display='none';
+    tbody.innerHTML=slice.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.title||'—'}</td>
+        <td style="color:var(--tx2);font-size:0.83rem;">${r.city || ''} ${r.district ? ', ' + r.district : ''}</td>
+        <td style="color:var(--tx2);">${roomTypeName(r.category)}</td>
+        <td style="color:var(--accent);font-weight:600;">${r.price!=null?Number(r.price).toLocaleString('ru')+' ₸':'—'}</td>
+        <td>${statusBadge(r.status||'active')}</td>
+        <td><div class="actions">
+          <button class="btn btn-ghost btn-sm" onclick="Rooms.openEdit(${r.id})">✏️ Ред.</button>
+          <button class="btn btn-danger btn-sm" onclick="Rooms.askDelete(${r.id},'${(r.title||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </div></td>
+      </tr>`).join('');
+  }
+
+  async function load() {
+    skeletonRows('roomsBody',6);
+    try { _all=await window.api.adminGetRooms(); render(1); }
+    catch(e){ document.getElementById('roomsBody').innerHTML=''; showGlobalError('Пространства: '+e.message); }
+  }
+
+  function openCreate() {
+    _editId=null;
+    document.getElementById('roomModalTitle').textContent='+ Добавить пространство';
+    ['r-name','r-address','r-price','r-capacity','r-img','r-description'].forEach(id=>{ 
+      const el = document.getElementById(id);
+      if (el) { el.value=''; el.classList.remove('error'); }
+    });
+    document.getElementById('r-type').value='coworking';
+    document.getElementById('r-status').value='active';
+    openModal('roomModal');
+  }
+
+  function openEdit(id) {
+    const r=_all.find(x=>x.id===id); if (!r) return;
+    _editId=id;
+    _editOwner=r.owner_email;
+    _editAmenities=r.amenities;
+    document.getElementById('roomModalTitle').textContent='✏️ Редактировать пространство';
+    document.getElementById('r-name').value       =r.title||'';
+    document.getElementById('r-address').value    =r.city + (r.district ? ', ' + r.district : '');
+    document.getElementById('r-type').value       =r.category||'coworking';
+    document.getElementById('r-price').value      =r.price!=null?r.price:'';
+    document.getElementById('r-capacity').value   =r.capacity||'';
+    document.getElementById('r-img').value        =r.img||'';
+    document.getElementById('r-description').value=r.description||'';
+    document.getElementById('r-status').value     =r.status||'active';
+    openModal('roomModal');
+  }
+
+  async function submit() {
+    const title      =document.getElementById('r-name').value.trim();
+    const cityFull   =document.getElementById('r-address').value.trim();
+    const city       =cityFull.split(',')[0].trim();
+    const district   =cityFull.split(',')[1]?.trim() || '';
+    const category   =document.getElementById('r-type').value;
+    const price      =parseFloat(document.getElementById('r-price').value)||0;
+    const capacity   =parseInt(document.getElementById('r-capacity').value)||null;
+    const img        =document.getElementById('r-img').value.trim();
+    const description=document.getElementById('r-description').value.trim();
+    const status     =document.getElementById('r-status').value;
+    
+    if (!title){ document.getElementById('r-name').classList.add('error'); return; }
+    document.getElementById('r-name').classList.remove('error');
+    
+    setBusy('roomSaveBtn',true);
+    try {
+      const amenities = _editId ? _editAmenities : [];
+      const owner_email = _editId ? _editOwner : null;
+      const payload={title,city,district,category,price,capacity,img,description,status,amenities,owner_email};
+      if (_editId) {
+        const updated=await window.api.adminUpdateRoom(_editId,payload);
+        const i=_all.findIndex(x=>x.id===_editId); if (i!==-1) _all[i]={..._all[i],...updated};
+        toast('Пространство обновлено');
+      } else {
+        const created=await window.api.adminCreateRoom(payload);
+        _all.unshift(created);
+        toast('Пространство добавлено');
+      }
+      closeModal('roomModal'); render(1);
+    } catch(e){ toast(e.message,'error'); }
+    finally { setBusy('roomSaveBtn',false); }
+  }
+
+  function askDelete(id,name) {
+    Confirm.ask(`Удалить пространство «${name}»?`, async()=>{
+      await window.api.adminDeleteRoom(id);
+      _all=_all.filter(x=>x.id!==id); render(1);
+      toast('Пространство удалено');
+    });
+  }
+
+  return { load, render, submit, openCreate, openEdit, askDelete,
+    filter: q=>{ _q=q.toLowerCase(); render(1); }, filterStatus: s=>{ _status=s; render(1); },
+    get all(){ return _all; } };
+})();
+
+// ─── BOOKINGS ────────────────────────────────────────────────────
+const Bookings = (() => {
+  let _all=[], _page=1, _q='', _status='', _editId=null;
+
+  function uName(email){ const u=Users.all.find(x=>x.email===email); return u?u.name:email; }
+  function rName(id){ const r=Rooms.all.find(x=>x.id===id); return r?r.title:`#${id}`; }
+
+  function filtered() {
+    return _all.filter(b=>{
+      const q=_q.toLowerCase();
+      return (!q||uName(b.user_email).toLowerCase().includes(q)||rName(b.room_id).toLowerCase().includes(q))
+          && (!_status||b.status===_status);
+    });
+  }
+
+  function render(page=_page) {
+    _page=page;
+    const arr=filtered();
+    const {slice}=renderPages(arr,page,'bookings-info','bookings-pages',render);
+    const empty=document.getElementById('bookings-empty');
+    const tbody=document.getElementById('bookingsBody');
+    if (!arr.length){ tbody.innerHTML=''; empty.style.display=''; return; }
+    empty.style.display='none';
+    tbody.innerHTML=slice.map(b=>{
+      return `
+        <tr>
+          <td><div class="user-cell">
+            <div class="avatar-sm">${uName(b.user_email)[0].toUpperCase()}</div>
+            <div>${uName(b.user_email)}</div>
+          </div></td>
+          <td style="font-weight:600;">${rName(b.room_id)}</td>
+          <td style="color:var(--tx2);font-size:0.83rem;">${fmtDate(b.booking_date)}<br><span style="font-size:0.78rem;">${b.slot||'—'}</span></td>
+          <td>${statusBadge(b.status)}</td>
+          <td><div class="actions">
+            <button class="btn btn-ghost btn-sm" onclick="Bookings.openEdit(${b.id})">✏️ Ред.</button>
+            <button class="btn btn-danger btn-sm" onclick="Bookings.askDelete(${b.id})">🗑️</button>
+          </div></td>
+        </tr>`;
+    }).join('');
+  }
+
+  async function load() {
+    skeletonRows('bookingsBody',5);
+    try { _all=await window.api.adminGetBookings(); render(1); }
+    catch(e){ document.getElementById('bookingsBody').innerHTML=''; showGlobalError('Брони: '+e.message); }
+  }
+
+  function populate() {
+    document.getElementById('b-user').innerHTML=
+      Users.all.map(u=>`<option value="${u.email}">${u.name} (${u.email})</option>`).join('');
+    document.getElementById('b-room').innerHTML=
+      Rooms.all.map(r=>`<option value="${r.id}">${r.title}</option>`).join('');
+  }
+
+  function openCreate() {
+    _editId=null;
+    document.getElementById('bookingModalTitle').textContent='+ Добавить бронь';
+    populate();
+    document.getElementById('b-date').value='';
+    document.getElementById('b-slots').value='';
+    document.getElementById('b-status').value='pending';
+    openModal('bookingModal');
+  }
+
+  function openEdit(id) {
+    const b=_all.find(x=>x.id===id); if (!b) return;
+    _editId=id;
+    document.getElementById('bookingModalTitle').textContent='✏️ Редактировать бронь';
+    populate();
+    document.getElementById('b-user').value  =b.user_email||'';
+    document.getElementById('b-room').value  =b.room_id||'';
+    document.getElementById('b-date').value  =b.booking_date||'';
+    document.getElementById('b-slots').value =b.slot||'';
+    document.getElementById('b-status').value=b.status||'pending';
+    openModal('bookingModal');
+  }
+
+  async function submit() {
+    const user_email  =document.getElementById('b-user').value;
+    const room_id     =parseInt(document.getElementById('b-room').value);
+    const booking_date=document.getElementById('b-date').value;
+    const slot        =document.getElementById('b-slots').value.trim();
+    const status      =document.getElementById('b-status').value;
+    if (!booking_date){ toast('Укажите дату','error'); return; }
+    setBusy('bookingSaveBtn',true);
+    try {
+      const payload={user_email,room_id,booking_date,slot,status};
+      if (_editId) {
+        const updated=await window.api.adminUpdateBooking(_editId,payload);
+        const i=_all.findIndex(x=>x.id===_editId); if (i!==-1) _all[i]={..._all[i],...updated};
+        toast('Бронь обновлена');
+      } else {
+        const created=await window.api.adminCreateBooking(payload);
+        _all.unshift(created);
+        toast('Бронь добавлена');
+      }
+      closeModal('bookingModal'); render(1);
+      document.getElementById('stat-pending').textContent=_all.filter(b=>b.status==='pending').length;
+    } catch(e){ toast(e.message,'error'); }
+    finally { setBusy('bookingSaveBtn',false); }
+  }
+
+  function askDelete(id) {
+    Confirm.ask('Удалить бронь? Это действие нельзя отменить.', async()=>{
+      await window.api.adminDeleteBooking(id);
+      _all=_all.filter(x=>x.id!==id); render(1);
+      toast('Бронь удалена');
+      document.getElementById('stat-pending').textContent=_all.filter(b=>b.status==='pending').length;
+    });
+  }
+
+  return { load, render, submit, openCreate, openEdit, askDelete,
+    filter: q=>{ _q=q.toLowerCase(); render(1); }, filterStatus: s=>{ _status=s; render(1); },
+    get all(){ return _all; } };
+})();
+
+// ─── INIT ─────────────────────────────────────────────────────────
+async function init() {
+  // Wait for AuthManager to finish init
+  if (typeof AuthManager !== 'undefined' && AuthManager.ready) {
+    await AuthManager.ready;
+  }
+
+  if (!AuthManager.isLoggedIn()) { window.location.href='login.html'; return; }
+  const user=AuthManager.getUser();
+  if (user.role!=='admin') { window.location.href='dashboard.html'; return; }
+
+  document.getElementById('headerUser').textContent=user.name||user.email;
+
+  // Load data and stats sequentially to avoid race conditions in renderers
+  try {
+    const stats = await window.api.adminGetStats();
+    updateStats(stats);
+    
+    await Users.load(); 
+    await Rooms.load(); 
+    await Bookings.load();
+  } catch (e) {
+    console.error('Initial load failed:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

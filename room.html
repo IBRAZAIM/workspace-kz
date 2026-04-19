@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Кабинет в аренду — WorkSpace.kz</title>
+  <meta name="description" content="Подробная страница кабинета — фото, удобства, расписание и бронирование на WorkSpace.kz.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .slots-wrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(70px,1fr)); gap: 0.6rem; }
+    .slot-btn {
+      padding: 0.6rem 0.4rem;
+      border: 2px solid var(--bd);
+      border-radius: var(--r-sm);
+      background: var(--bg3);
+      color: var(--tx2);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .slot-btn:hover:not(.booked):not(.loading-slots) { border-color: var(--accent); background: rgba(200,255,87,0.08); }
+    .slot-btn.selected  { border-color: var(--accent); background: rgba(200,255,87,0.15); color: var(--accent); }
+    .slot-btn.booked    { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+    .slot-btn.blocked   { opacity: 0.3; cursor: not-allowed; background: var(--bg2); }
+    .total-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-top: 1px solid var(--bd); margin-top: 1rem; }
+    .review-card { padding: 1.5rem; }
+    .stars { color: var(--ok); }
+    #roomMap { height: 300px; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--bd); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+  <div class="nav-right" id="navRight">
+    <a href="login.html" class="header-back">Войти</a>
+  </div>
+</header>
+
+<!-- BREADCRUMBS -->
+<div style="padding:0.85rem 2rem;border-bottom:1px solid var(--bd);background:var(--bg2);">
+  <a href="index.html" style="color:var(--tx2);text-decoration:none;font-size:0.88rem;">Главная</a>
+  <span style="color:var(--tx3);margin:0 0.5rem;">/</span>
+  <a href="catalog.html" style="color:var(--tx2);text-decoration:none;font-size:0.88rem;">Каталог</a>
+  <span style="color:var(--tx3);margin:0 0.5rem;">/</span>
+  <span id="breadcrumbTitle" style="color:var(--tx);font-weight:500;font-size:0.88rem;"></span>
+</div>
+
+<main style="width: 100%;">
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:2rem;padding:2rem 1.5rem;" id="roomGrid">
+
+    <!-- LEFT: Photos + Content -->
+    <div>
+      <!-- Photo gallery -->
+      <div id="photoCarousel" style="position:relative;height:480px;border-radius:var(--r-lg);overflow:hidden;margin-bottom:1.25rem;background:var(--bg3);">
+        <img id="mainPhoto" src="" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.onerror=null;this.src='https://placehold.co/800x600/18181C/5A5A62?text=Нет+фото';">
+        <button id="prevBtn" onclick="shiftPhoto(-1)" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;">‹</button>
+        <button id="nextBtn" onclick="shiftPhoto(1)"  style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:none;color:#fff;width:44px;height:44px;border-radius:50%;cursor:pointer;font-size:1.3rem;">›</button>
+      </div>
+      <!-- Thumbnails -->
+      <div id="photoThumbs" style="display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem;margin-bottom:2rem;"></div>
+
+      <!-- Title & price -->
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+        <h1 id="roomTitle" style="font-size:1.9rem;font-weight:800;margin:0;"></h1>
+        <div id="roomPrice" style="font-size:2rem;font-weight:800;color:var(--accent);"></div>
+      </div>
+
+      <!-- Location & rating -->
+      <div style="display:flex;gap:1rem;align-items:center;margin-bottom:1.75rem;flex-wrap:wrap;">
+        <div id="roomLocation" style="color:var(--tx2);font-size:1rem;"></div>
+        <div id="roomRating" style="display:flex;align-items:center;gap:0.5rem;background:var(--ok-bg);padding:0.45rem 0.9rem;border-radius:var(--r-sm);color:var(--ok);font-weight:600;"></div>
+      </div>
+
+      <!-- Amenities -->
+      <div style="margin-bottom:2rem;">
+        <h3 style="margin-bottom:1rem;">Удобства</h3>
+        <div id="roomAmenities" style="display:flex;flex-wrap:wrap;gap:0.6rem;"></div>
+      </div>
+
+      <!-- Description -->
+      <div style="margin-bottom:2rem;">
+        <h3 style="margin-bottom:0.75rem;">Описание</h3>
+        <p id="roomDescription" style="color:var(--tx2);line-height:1.75;"></p>
+      </div>
+
+      <!-- Map -->
+      <div style="margin-bottom:2rem;">
+        <h3 style="margin-bottom:1rem;">Расположение</h3>
+        <div id="roomMap"></div>
+      </div>
+
+      <!-- Reviews -->
+      <div>
+        <h3 style="margin-bottom:1.5rem;">Отзывы</h3>
+        <div style="display:grid;gap:1.25rem;">
+          <div class="page-card review-card">
+            <div style="display:flex;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+              <div class="stars">★★★★★</div>
+              <div style="font-weight:600;">Айгуль К.</div>
+              <div style="color:var(--tx2);font-size:0.85rem;">2 дня назад</div>
+            </div>
+            <p style="color:var(--tx2);">Отличный кабинет! Тихо, чисто, Wi-Fi быстрый. Очень удобно.</p>
+          </div>
+          <div class="page-card review-card">
+            <div style="display:flex;gap:1rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+              <div class="stars" style="color:var(--ok);">★★★★☆</div>
+              <div style="font-weight:600;">Ерлан С.</div>
+              <div style="color:var(--tx2);font-size:0.85rem;">1 неделя назад</div>
+            </div>
+            <p style="color:var(--tx2);">Проектор отличный, для презентаций идеально. Только парковка тесновата.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Booking panel (sticky) -->
+    <div style="position:sticky;top:100px;align-self:start;">
+      <div class="page-card" style="padding:2rem;">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div id="sidebarPrice" style="font-size:2.2rem;font-weight:800;color:var(--accent);margin-bottom:0.2rem;"></div>
+          <div style="color:var(--tx2);">в час</div>
+        </div>
+
+        <!-- Date picker -->
+        <div class="field-group">
+          <label class="field-label" for="bookDate">Дата</label>
+          <input type="date" id="bookDate" class="field" onchange="loadSlots()">
+        </div>
+
+        <!-- Slots -->
+        <div style="margin:1.25rem 0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+            <label class="field-label" style="margin:0;">Время</label>
+            <span id="slotsHint" style="font-size:0.78rem;color:var(--tx3);">Выберите дату</span>
+          </div>
+          <div id="slotsGrid" class="slots-wrap"></div>
+        </div>
+
+        <!-- Summary -->
+        <div id="totalRow" class="total-row" style="display:none;">
+          <span style="color:var(--tx2);">Итого</span>
+          <span id="totalPrice" style="font-size:1.3rem;font-weight:800;color:var(--accent);"></span>
+        </div>
+
+        <button id="bookButton" class="btn-primary" style="width:100%;padding:1.1rem;font-size:1rem;margin-top:0.75rem;" onclick="showPaymentStep()">
+          Забронировать кабинет
+        </button>
+
+        <!-- Guarantees -->
+        <div style="margin-top:1.5rem;padding:1.25rem;background:var(--bg3);border-radius:var(--r-lg);border:1px solid var(--bd);">
+          <h4 style="margin-bottom:0.75rem;color:var(--tx);">Что включено</h4>
+          <ul style="color:var(--tx2);line-height:1.8;list-style:none;padding:0;">
+            <li>✓ Бронь от 1 часа</li>
+            <li>✓ Оплата Kaspi Pay / картой</li>
+            <li>✓ Код доступа за 15 мин до</li>
+            <li>✓ Без залога и комиссии</li>
+            <li>✓ Поддержка 24/7</li>
+          </ul>
+        </div>
+        <div style="margin-top:1rem;text-align:center;color:var(--tx2);font-size:0.88rem;">🛡️ Гарантия WorkSpace.kz</div>
+      </div>
+    </div>
+
+  </div><!-- /roomGrid -->
+</main>
+
+<footer>© 2025 WorkSpace.kz</footer>
+
+<!-- BOOKING MODAL -->
+<div id="overlay" class="overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h3 id="modalTitle">Бронирование</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="api.js"></script>
+<script src="auth.js" defer></script>
+<script src="main.js" defer></script>
+<script>
+// ── State ─────────────────────────────────────────────────────
+const urlParams  = new URLSearchParams(window.location.search);
+const roomId     = Number(urlParams.get('id') || 1);
+let roomPhotos   = [];
+let photoIdx     = 0;
+let selectedSlots = [];
+let map;
+
+// ── Load room ─────────────────────────────────────────────────
+async function loadRoom() {
+  try {
+    // Try to get specific room from backend, fall back to list
+    window.currentRoom = await window.api.getRoom(roomId);
+  } catch {
+    try {
+      const rooms = await window.api.getRooms();
+      window.currentRoom = rooms.find(r => r.id == roomId) || rooms[0];
+    } catch {
+      Utils?.showToast('Не удалось загрузить данные кабинета', 'error');
+      return;
+    }
+  }
+
+  const r = window.currentRoom;
+  document.title = `${r.title} — WorkSpace.kz`;
+  document.getElementById('pageTitle').textContent = `${r.title} в аренду`;
+  document.getElementById('breadcrumbTitle').textContent = r.title;
+
+  document.getElementById('mainPhoto').src = r.img || '';
+  document.getElementById('roomTitle').textContent = r.title;
+  document.getElementById('roomPrice').textContent = `${r.price}₸/ч`;
+  document.getElementById('sidebarPrice').textContent = `${r.price}₸`;
+  document.getElementById('roomLocation').textContent = `📍 ${r.city}, ${r.district}`;
+  document.getElementById('roomRating').innerHTML = `★ ${r.rating || '—'} <span style="color:var(--tx2);font-weight:400;">(127 отзывов)</span>`;
+  document.getElementById('roomDescription').textContent = r.description || 'Современный кабинет, полностью оснащённый для работы. Быстрый Wi-Fi, комфортная мебель.';
+  document.getElementById('roomAmenities').innerHTML = (r.amenities || []).map(a => `<span class="badge">${a}</span>`).join('');
+
+  roomPhotos = (r.img || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (roomPhotos.length === 0) {
+    roomPhotos = ['https://placehold.co/800x600/18181C/5A5A62?text=Нет+фото'];
+  }
+  renderThumbs();
+  initMap(r);
+
+  // Set today as default date and load slots
+  const today = new Date().toISOString().slice(0, 10);
+  document.getElementById('bookDate').value = today;
+  document.getElementById('bookDate').min   = today;
+  await loadSlots();
+
+  updateNavbar(AuthManager.getUser?.() || AuthManager.currentUser);
+}
+
+// ── Photo gallery ─────────────────────────────────────────────
+function renderThumbs() {
+  document.getElementById('photoThumbs').innerHTML = roomPhotos.map((src, i) =>
+    `<img src="${src || ''}" style="width:80px;height:60px;object-fit:cover;border-radius:var(--r-sm);cursor:pointer;opacity:${i===0?1:0.55};border:2px solid ${i===0?'var(--accent)':'transparent'};" onclick="setPhoto(${i})" onerror="this.onerror=null;this.src='https://placehold.co/80x60/18181C/5A5A62?text=Фото';">`
+  ).join('');
+}
+function setPhoto(idx) {
+  photoIdx = idx;
+  document.getElementById('mainPhoto').src = roomPhotos[idx];
+  document.querySelectorAll('#photoThumbs img').forEach((img, i) => {
+    img.style.opacity = i === idx ? '1' : '0.55';
+    img.style.border  = `2px solid ${i === idx ? 'var(--accent)' : 'transparent'}`;
+  });
+}
+function shiftPhoto(dir) {
+  setPhoto((photoIdx + dir + roomPhotos.length) % roomPhotos.length);
+}
+
+// ── Map ───────────────────────────────────────────────────────
+const CITY_COORDS = {
+  'алматы':    [43.2551, 76.9126],
+  'астана':    [51.1801, 71.4460],
+  'шымкент':   [42.3000, 69.5900],
+  'тараз':     [42.9000, 71.3700],
+  'павлодар':  [52.2834, 76.9742],
+  'костанай':  [53.2141, 63.6225],
+  'усть-каменогорск': [49.9872, 82.6140],
+  'семей':     [50.4068, 80.2364],
+  'петропавловск': [54.8648, 69.1420],
+  'актобе':    [50.2839, 57.1670],
+  'атырау':    [47.1213, 51.8804],
+  'актау':     [43.6500, 51.1668],
+  'кокшетау':  [53.2844, 69.3960],
+  'талдыкорган': [45.0164, 78.3671],
+  'туркестан': [43.3011, 68.2694],
+  'кызылорда': [44.8531, 65.5075],
+  'жезказган': [47.7952, 67.7145],
+  'темиртау':  [50.0582, 72.9699],
+};
+
+function initMap(room) {
+  const cityKey = (room.city || '').toLowerCase();
+  const coords  = CITY_COORDS[cityKey] || [48.0, 67.0];
+  const jitter  = () => (Math.random() - 0.5) * 0.025;
+
+  if (map) { map.remove(); map = null; }
+  map = L.map('roomMap').setView(coords, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+  }).addTo(map);
+  L.marker([coords[0] + jitter(), coords[1] + jitter()])
+    .addTo(map)
+    .bindPopup(`<b>${room.title}</b><br>${room.city}, ${room.district}`)
+    .openPopup();
+}
+
+// ── Slots ─────────────────────────────────────────────────────
+const ALL_SLOTS = ['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00'];
+
+async function loadSlots() {
+  const date = document.getElementById('bookDate').value;
+  const grid = document.getElementById('slotsGrid');
+  const hint = document.getElementById('slotsHint');
+  selectedSlots = [];
+  updateTotal();
+
+  if (!date) {
+    grid.innerHTML = '<div style="color:var(--tx3);font-size:0.85rem;">Выберите дату</div>';
+    hint.textContent = 'Выберите дату';
+    return;
+  }
+
+  grid.innerHTML = ALL_SLOTS.map(s => `<div class="slot-btn loading-slots" style="opacity:0.4;">${s}</div>`).join('');
+  hint.textContent = 'Загрузка…';
+
+  let booked = [], blocked = [], pending = [];
+  try {
+    const avail = await window.api.getAvailability(roomId, date);
+    booked  = avail.bookedSlots  || [];
+    blocked = avail.blockedSlots || [];
+    pending = avail.pendingSlots || [];
+  } catch {
+    // backend unreachable — show all as free
+  }
+
+  const freeCount = ALL_SLOTS.filter(s => !booked.includes(s) && !blocked.includes(s)).length;
+  hint.textContent = `Свободно: ${freeCount} слотов`;
+
+  grid.innerHTML = ALL_SLOTS.map(s => {
+    if (blocked.includes(s)) return `<div class="slot-btn blocked" title="Закрыто">${s}</div>`;
+    if (booked.includes(s) || pending.includes(s))
+      return `<div class="slot-btn booked" title="Занято">${s}</div>`;
+    return `<div class="slot-btn" onclick="toggleSlot(this,'${s}')">${s}</div>`;
+  }).join('');
+}
+
+function toggleSlot(el, slot) {
+  const idx = selectedSlots.indexOf(slot);
+  if (idx >= 0) {
+    selectedSlots.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    selectedSlots.push(slot);
+    el.classList.add('selected');
+  }
+  if (typeof window.setSelectedSlots === 'function') window.setSelectedSlots(selectedSlots);
+  updateTotal();
+}
+
+function updateTotal() {
+  const row = document.getElementById('totalRow');
+  if (selectedSlots.length === 0) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  const price = (window.currentRoom?.price || 0) * selectedSlots.length;
+  document.getElementById('totalPrice').textContent =
+    price.toLocaleString('ru-RU') + '₸';
+}
+
+document.addEventListener('DOMContentLoaded', loadRoom);
+</script>
+</body>
+</html>

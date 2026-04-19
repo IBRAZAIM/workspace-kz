@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Каталог кабинетов — WorkSpace.kz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+  <div class="nav-right" id="navRight">
+    <a href="login.html" class="header-back">Войти</a>
+  </div>
+</header>
+
+<main style="display: flex; align-items: flex-start; gap: 2vw; width: 100%;">
+  <!-- Filters Sidebar -->
+  <div style="position: sticky; top: 80px; width: 320px; height: fit-content; padding: 2rem 0;">
+    <div class="page-card" style="padding: 2rem;">
+      <h3 style="margin-bottom: 1.5rem;">Фильтры</h3>
+      
+      <!-- Price -->
+      <div class="field-group">
+        <label>Цена/час</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="range" id="priceMin" min="500" max="3000" value="700" style="flex: 1;">
+          <input type="range" id="priceMax" min="500" max="3000" value="2500" style="flex: 1;">
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--tx2); margin-top: 0.25rem;">
+          <span id="priceMinVal">700₸</span>
+          <span id="priceMaxVal">2500₸</span>
+        </div>
+      </div>
+      
+      <!-- Category -->
+      <div class="field-group">
+        <label>Категория</label>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <label><input type="checkbox" value="психолог"> Психологи (23)</label>
+          <label><input type="checkbox" value="репетитор"> Репетиторы (18)</label>
+          <label><input type="checkbox" value="совещание"> Совещания (31)</label>
+          <label><input type="checkbox" value="IT"> IT (12)</label>
+          <label><input type="checkbox" value="юрист"> Юристы (9)</label>
+        </div>
+      </div>
+      
+      <!-- Amenities -->
+      <div class="field-group">
+        <label>Удобства</label>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <label><input type="checkbox" value="Wi-Fi"> Wi-Fi (147)</label>
+          <label><input type="checkbox" value="Проектор"> Проектор (89)</label>
+          <label><input type="checkbox" value="Парковка"> Парковка (56)</label>
+          <label><input type="checkbox" value="Кофе"> Кофе/чай (34)</label>
+        </div>
+      </div>
+      
+      <button class="btn-primary" onclick="applyCatalogFilters()" style="width: 100%; margin-top: 1rem;">Применить</button>
+      <button class="btn-secondary" onclick="resetFilters()" style="width: 100%; margin-top: 0.5rem;">Сбросить</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div style="flex: 1; padding-left: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <h1 style="margin: 0; font-size: 2rem;">Каталог кабинетов</h1>
+        <div id="resultsCount" style="color: var(--tx2); font-size: 1.1rem;">147 объявлений</div>
+      </div>
+      <div style="display: flex; gap: 1rem;">
+        <select id="sortSelect" style="padding: 0.75rem; border: 1px solid var(--bd); border-radius: var(--r-sm); background: var(--bg3); color: var(--tx);">
+          <option>По релевантности</option>
+          <option>По цене (мин→макс)</option>
+          <option>По рейтингу</option>
+          <option>Новизна</option>
+        </select>
+        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 1px solid var(--bd); border-radius: var(--r-sm);">
+          <button id="viewGrid" class="view-btn active">🗂️</button>
+          <button id="viewList">📄</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="catalogLoader" style="display: flex; align-items: center; justify-content: center; padding: 4rem; color: var(--tx2);">
+      <div style="width: 40px; height: 40px; border: 4px solid var(--bg3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <span style="margin-left: 1rem;">Загрузка...</span>
+    </div>
+    
+    <div id="catalogGrid" class="spaces-grid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 1.5rem;"></div>
+  </div>
+</main>
+
+<footer style="text-align: center; padding: 3rem 2rem; color: var(--tx2); border-top: 1px solid var(--bd); margin-top: 3rem;">
+  © 2025 WorkSpace.kz · Помощь · Условия · Конфиденциальность
+</footer>
+
+<div id="toast" class="toast"></div>
+
+<script src="api.js"></script>
+<script src="auth.js" defer></script>
+<script src="data.js"></script>
+<script src="main.js" defer data-page="catalog"></script>
+<script>
+let catalogFilters = {};
+
+async function loadCatalog() {
+  updateNavbar(AuthManager?.currentUser || null);
+  document.getElementById('catalogLoader').style.display = 'flex';
+  document.getElementById('catalogGrid').style.display = 'none';
+  
+  const rooms = await getRooms(catalogFilters);
+  displayCatalogRooms(rooms);
+  
+  document.getElementById('catalogLoader').style.display = 'none';
+  document.getElementById('catalogGrid').style.display = 'grid';
+  document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;
+}
+
+function displayCatalogRooms(rooms) {
+  const grid = document.getElementById('catalogGrid');
+  grid.innerHTML = rooms.map(room => `
+    <div class="space-card" onclick="window.open('room.html?id=${room.id}', '_self')" style="cursor: pointer;">
+      <div class="space-img-container">
+        <img src="${room.img || ''}" alt="${room.title}" class="space-img" onerror="this.onerror=null;this.src='https://placehold.co/600x400/18181C/5A5A62?text=Нет+фото';">
+        <div class="card-label">${room.category}</div>
+      </div>
+      <div style="padding: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
+          <h3 style="font-size: 1.15rem; margin: 0;">${room.title}</h3>
+          <div style="font-size: 1.4rem; font-weight: 800; color: var(--accent);">${room.price}₸/ч</div>
+        </div>
+        <div style="display: flex; gap: 1rem; margin-bottom: 1rem; font-size: 0.9rem;">
+          <div style="color: var(--ok);">★ ${room.rating}</div>
+          <div style="color: var(--tx2);">${room.city}</div>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+          ${room.amenities.slice(0, 3).map(a => `<span class="badge">${a}</span>`).join('')}
+          ${room.amenities.length > 3 ? '<span class="badge">+ещё</span>' : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function applyCatalogFilters() {
+  catalogFilters.priceMin = parseInt(document.getElementById('priceMin').value);
+  catalogFilters.priceMax = parseInt(document.getElementById('priceMax').value);
+  loadCatalog();
+}
+
+function resetFilters() {
+  catalogFilters = {};
+  document.getElementById('priceMin').value = '700';
+  document.getElementById('priceMax').value = '2500';
+  document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+  loadCatalog();
+}
+
+document.addEventListener('DOMContentLoaded', loadCatalog);
+</script>
+</body>
+</html>

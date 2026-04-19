@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Дашборд — WorkSpace.kz</title>
+  <meta name="description" content="Личный кабинет пользователя WorkSpace.kz — активные брони, история и статистика.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .booking-card {
+      display: grid;
+      grid-template-columns: 90px 1fr auto;
+      gap: 1.25rem;
+      align-items: center;
+      padding: 1.5rem;
+    }
+    @media (max-width: 600px) {
+      .booking-card { grid-template-columns: 1fr; }
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .status-pill.CONFIRMED  { background: var(--ok-bg);   color: var(--ok); }
+    .status-pill.PENDING    { background: var(--warn-bg);  color: var(--warn); }
+    .status-pill.CANCELLED  { background: var(--err-bg);   color: var(--err); }
+    .status-pill.COMPLETED  { background: var(--bg3);      color: var(--tx2); }
+    .status-pill.BLOCKED    { background: var(--bg3);      color: var(--tx3); }
+    .stat-card {
+      text-align: center;
+      padding: 2rem;
+    }
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+    }
+    .stat-label { color: var(--tx2); font-size: 0.9rem; }
+    .empty-state {
+      padding: 3rem;
+      text-align: center;
+      color: var(--tx2);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+<header>
+  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+  <div class="nav-right" id="navRight"></div>
+</header>
+
+<main style="width: 100%;">
+
+  <!-- Stats Row -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="page-card stat-card">
+      <div class="stat-value" id="statActive" style="color: var(--accent);">—</div>
+      <div class="stat-label">активных броней</div>
+    </div>
+    <div class="page-card stat-card">
+      <div class="stat-value" id="statTotal" style="color: var(--ok);">—</div>
+      <div class="stat-label">всего броней</div>
+    </div>
+    <div class="page-card stat-card">
+      <div class="stat-value" id="statSpent" style="color: var(--accent);">—</div>
+      <div class="stat-label">потрачено</div>
+    </div>
+  </div>
+
+  <!-- Bookings list -->
+  <div class="page-card" style="overflow: hidden; padding: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 1.75rem; border-bottom: 1px solid var(--bd);">
+      <h2 style="margin: 0; font-size: 1.2rem;">Мои бронирования</h2>
+      <a href="catalog.html" class="btn-primary" style="padding: 0.6rem 1.2rem; font-size: 0.85rem; text-decoration: none;">+ Забронировать</a>
+    </div>
+
+    <div id="bookingsList">
+      <div class="empty-state">
+        <div style="width: 32px; height: 32px; border: 3px solid var(--bg3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+        Загрузка…
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>© 2025 WorkSpace.kz</footer>
+<div id="toast" class="toast"></div>
+
+<!-- api.js MUST come first so AuthManager can call window.api -->
+<script src="api.js"></script>
+<script src="auth.js" defer></script>
+<script src="main.js" defer data-page="dashboard"></script>
+<script>
+// ── Helpers ────────────────────────────────────────────────────
+const LABELS = {
+  CONFIRMED: 'Подтверждена ✓',
+  PENDING:   'Ожидает',
+  CANCELLED: 'Отменена ✗',
+  COMPLETED: 'Завершена ✅',
+  BLOCKED:   'Закрыто',
+};
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const date = new Date(d);
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function fmtPrice(p) {
+  return Number(p || 0).toLocaleString('ru-RU') + '₸';
+}
+
+// ── Render bookings ────────────────────────────────────────────
+function renderBookings(bookings) {
+  const container = document.getElementById('bookingsList');
+
+  // Stats
+  const active = bookings.filter(b => ['CONFIRMED', 'PENDING'].includes(b.status)).length;
+  const spent  = bookings.reduce((acc, b) => acc + Number(b.total_price || 0), 0);
+  document.getElementById('statActive').textContent = active;
+  document.getElementById('statTotal').textContent  = bookings.length;
+  document.getElementById('statSpent').textContent  = fmtPrice(spent);
+
+  if (bookings.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">📭</div>
+        <p>Пока нет броней.</p>
+        <a href="catalog.html" class="btn-primary" style="display:inline-block;margin-top:1rem;padding:0.75rem 1.5rem;text-decoration:none;">Найти кабинет</a>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = bookings.map(b => `
+    <div class="page-card booking-card" style="border:none;border-bottom:1px solid var(--bd);border-radius:0;">
+      <div style="width:90px;height:70px;border-radius:var(--r-sm);overflow:hidden;flex-shrink:0;">
+        <img src="${b.room_img || ''}"
+             style="width:100%;height:100%;object-fit:cover;" alt="${b.room_title}" onerror="this.onerror=null;this.src='https://placehold.co/90x70/18181C/5A5A62?text=Фото';">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.35rem;flex-wrap:wrap;">
+          <h3 style="margin:0;font-size:1rem;">${b.room_title}</h3>
+          <span class="status-pill ${b.status}">${LABELS[b.status] || b.status}</span>
+        </div>
+        <div style="color:var(--tx2);font-size:0.88rem;margin-bottom:0.3rem;">
+          ${fmtDate(b.booking_date)} · ${b.slot}
+        </div>
+        <div style="color:var(--accent);font-weight:700;">${fmtPrice(b.total_price)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end;">
+        ${['CONFIRMED','PENDING'].includes(b.status) ? `
+          <button class="btn-secondary" onclick="doCancel(${b.id}, this)" style="white-space:nowrap;">Отменить</button>
+        ` : ''}
+        <a href="room.html?id=${b.room_id}" class="btn-primary" style="padding:0.55rem 1rem;font-size:0.83rem;text-decoration:none;">Повторить</a>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Cancel booking ─────────────────────────────────────────────
+async function doCancel(id, btn) {
+  if (!confirm('Отменить эту бронь?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Отмена…';
+  try {
+    await window.api.cancelBooking(id);
+    Utils.showToast('Бронь отменена', 'success');
+    await loadDashboard();
+  } catch (e) {
+    Utils.showToast(e.message || 'Ошибка', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Отменить';
+  }
+}
+
+// ── Load page ──────────────────────────────────────────────────
+async function loadDashboard() {
+  // Wait for AuthManager to finish init
+  if (typeof AuthManager !== 'undefined' && AuthManager.ready) {
+    await AuthManager.ready;
+  }
+
+  if (!AuthManager.isLoggedIn()) {
+    window.location.href = 'login.html?redirect=dashboard.html';
+    return;
+  }
+
+  const user = AuthManager.getUser();
+  if (user.role === 'admin') {
+    window.location.href = 'admin.html';
+    return;
+  }
+  updateNavbar(user);
+
+  try {
+    const bookings = await window.api.getBookings();
+    renderBookings(bookings);
+  } catch (e) {
+    document.getElementById('bookingsList').innerHTML = `
+      <div class="empty-state">
+        <div class="icon">⚠️</div>
+        <p>Не удалось загрузить брони: ${e.message}</p>
+        <button class="btn-primary" onclick="loadDashboard()" style="margin-top:1rem;">Повторить</button>
+      </div>`;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+</body>
+</html>

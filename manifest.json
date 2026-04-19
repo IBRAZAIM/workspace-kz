@@ -1,0 +1,15 @@
+{
+  "name": "WorkSpace.kz",
+  "short_name": "WorkSpace",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D0F",
+  "theme_color": "#C8FF57",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijk2IiBjeT0iOTYiIHI9Ijk2IiBmaWxsPSIjMEM5RkZDIi8+CjxwYXRoIGQ9Ik0xMjAgMTM2QzEyMCAxMzYgMTE2IDEzMiAxMTIgMTI4QzEwOCAxMjQgMTA0IDEyMCA5NiAxMjBDODggMTIwIDg0IDEyNCA4MCAxMjhDOCAxMzIgODAgMTM2IDgwIDEzNkM4MCAxMzYgODAgMTM2IDgwIDEzNiIvPgo8L3N2Zz4K",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

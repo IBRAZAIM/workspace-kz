@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkSpace.kz — Почасовая аренда кабинетов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#C8FF57">
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════ -->
+<header>
+  <a href="index.html" class="logo">Work<span>Space</span>.kz</a>
+  <div class="nav-right">
+    <a href="login.html" class="header-back">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 11L5 7L9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Войти
+    </a>
+  </div>
+</header>
+
+<!-- HERO -->
+<main>
+  <section class="hero">
+    <p class="card-eyebrow">WorkSpace.kz</p>
+    <h1 class="card-title">Кабинет на <em>любой час</em><br>в любом городе</h1>
+    <p style="color: var(--tx2); margin-bottom: 2rem; font-size: 1.1rem;">Психологи, репетиторы, юристы — арендуйте ровно на столько, сколько нужно. Без депозита.</p>
+    <div class="page-card">
+      <div class="field-row">
+        <input id="heroCity" class="field" placeholder="Город или район...">
+        <select id="heroCat" class="field">
+          <option value="">Все категории</option>
+          <option>Психологи</option><option>Репетиторы</option><option>Совещания</option>
+          <option>Бьюти</option><option>Юристы</option><option>IT</option>
+          <option>Массаж</option><option>Тренинги</option><option>Логопеды</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="heroSearch()" style="margin-top: 1rem;">🔍 Найти кабинет</button>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin-top: 3rem;">
+      <div><strong style="display: block; font-size: 2rem;">340+</strong><span style="color: var(--tx2);">кабинетов</span></div>
+      <div><strong style="display: block; font-size: 2rem;">18</strong><span style="color: var(--tx2);">городов</span></div>
+      <div><strong style="display: block; font-size: 2rem;">от 900₸</strong><span style="color: var(--tx2);">в час</span></div>
+      <div><strong style="display: block; font-size: 2rem;">4.8 ★</strong><span style="color: var(--tx2);">рейтинг</span></div>
+    </div>
+  </section>
+
+<!-- FILTER STRIP -->
+<div class="tabs" id="filterStrip" style="margin-top: 2rem;">
+  <button class="tab-btn active" onclick="toggleCat(this,'')">Все</button>
+  <button class="tab-btn" onclick="toggleCat(this,'психолог')">Психологи</button>
+  <button class="tab-btn" onclick="toggleCat(this,'репетитор')">Репетиторы</button>
+  <button class="tab-btn" onclick="toggleCat(this,'совещание')">Совещания</button>
+  <div class="divider" style="margin: 1rem 0;">
+    <div class="divider-line"></div>
+    <span class="divider-text">Удобства</span>
+    <div class="divider-line"></div>
+  </div>
+  <button class="tab-btn" onclick="toggleAmenity(this,'Wi-Fi')">Wi-Fi</button>
+  <button class="tab-btn" onclick="toggleAmenity(this,'Проектор')">Проектор</button>
+  <button class="tab-btn" onclick="toggleAmenity(this,'Парковка')">Парковка</button>
+  <button class="tab-btn" onclick="toggleAmenity(this,'Кофе')">Кофе</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content-wrapper">
+  <!-- CARDS SECTION -->
+  <section class="section">
+    <div class="section-head">
+      <h2 id="resultLabel">Доступные кабинеты</h2>
+      <a href="#" onclick="Utils.showToast('Карта — скоро!');return false">Карта →</a>
+    </div>
+    <div class="loader" id="cardsLoader" style="display: flex; align-items: center; justify-content: center; padding: 4rem; color: var(--tx2);">
+      <div style="width: 32px; height: 32px; border: 3px solid var(--bg3); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <span style="margin-left: 1rem;">Загрузка кабинетов...</span>
+    </div>
+    <div class="spaces-grid" id="cardsGrid" data-page="index" style="display: none;"></div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section">
+    <div class="section-head">
+      <h2>Как это работает</h2>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap: 1.5rem;">
+      <div class="page-card">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: #0D0D0F; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">1</div>
+        <h3 style="margin-bottom: 0.5rem;">Найдите кабинет</h3>
+        <p style="color: var(--tx2);">Фильтры по городу, категории, удобствам и цене</p>
+      </div>
+      <div class="page-card">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: #0D0D0F; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">2</div>
+        <h3 style="margin-bottom: 0.5rem;">Выберите время</h3>
+        <p style="color: var(--tx2);">Интерактивный слот-пикер, бронь от 1 часа</p>
+      </div>
+      <div class="page-card">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: #0D0D0F; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">3</div>
+        <h3 style="margin-bottom: 0.5rem;">Оплатите онлайн</h3>
+        <p style="color: var(--tx2);">Kaspi Pay, карта, QR — безопасно</p>
+      </div>
+      <div class="page-card">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: var(--accent); color: #0D0D0F; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.1rem; margin-bottom: 1rem;">4</div>
+        <h3 style="margin-bottom: 0.5rem;">Получите доступ</h3>
+        <p style="color: var(--tx2);">Код или QR приходит в WhatsApp за 15 минут</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- LANDLORD CTA -->
+  <section class="section">
+    <div class="page-card">
+      <h2 style="margin-bottom: 1rem;">🏢 Сдаёте кабинет?</h2>
+      <p style="color: var(--tx2); margin-bottom: 1.5rem;">Разместите объявление бесплатно и начните получать доход уже сегодня. Среднее заполнение — 4–6 часов в день.</p>
+      <button class="btn-primary" onclick="Utils.showToast('Регистрация арендодателя — скоро!'); window.location.href='login.html#register';">Зарегистрировать кабинет</button>
+    </div>
+  </section>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div style="width: 100%;">
+    <div class="logo" style="color:#fff;font-size:1.2rem;margin-bottom:1rem;display:block">Work<span style="color:#60A5FA">Space</span>.kz</div>
+    <div class="footer-links">
+      <a href="#">О компании</a>
+      <a href="#">Помощь</a>
+      <a href="#">Условия</a>
+      <a href="#">Блог</a>
+      <a href="#">Контакты</a>
+    </div>
+    <p style="color:rgba(255,255,255,.3);font-size:.8rem;margin:0">&copy; 2025 WorkSpace.kz. Все права защищены.</p>
+  </div>
+</footer>
+
+<!-- BOOKING MODAL -->
+<div id="overlay" class="overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hd">
+      <h3 id="modalTitle">Бронирование</h3>
+      <button class="close-btn" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script src="api.js"></script>
+<script src="db.js" defer></script><!-- offline fallback for data.js -->
+<script src="auth.js" defer></script>
+<script src="data.js"></script>
+<script src="main.js" defer data-page="index"></script>
+</body>
+</html>
