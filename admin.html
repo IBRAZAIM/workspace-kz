@@ -658,8 +658,8 @@ const Rooms = (() => {
         <td style="color:var(--accent);font-weight:600;">${r.price!=null?Number(r.price).toLocaleString('ru')+' ₸':'—'}</td>
         <td>${statusBadge(r.status||'active')}</td>
         <td><div class="actions">
-          <button class="btn btn-ghost btn-sm" onclick="Rooms.openEdit(${r.id})">✏️ Ред.</button>
-          <button class="btn btn-danger btn-sm" onclick="Rooms.askDelete(${r.id},'${(r.title||'').replace(/'/g,"\\'")}')">🗑️</button>
+          <button class="btn btn-ghost btn-sm" onclick="Rooms.openEdit('${r.id}')">✏️ Ред.</button>
+          <button class="btn btn-danger btn-sm" onclick="Rooms.askDelete('${r.id}','${(r.title||'').replace(/'/g,"\\'")}')">🗑️</button>
         </div></td>
       </tr>`).join('');
   }
@@ -780,8 +780,8 @@ const Bookings = (() => {
           <td style="color:var(--tx2);font-size:0.83rem;">${fmtDate(b.booking_date)}<br><span style="font-size:0.78rem;">${b.slot||'—'}</span></td>
           <td>${statusBadge(b.status)}</td>
           <td><div class="actions">
-            <button class="btn btn-ghost btn-sm" onclick="Bookings.openEdit(${b.id})">✏️ Ред.</button>
-            <button class="btn btn-danger btn-sm" onclick="Bookings.askDelete(${b.id})">🗑️</button>
+            <button class="btn btn-ghost btn-sm" onclick="Bookings.openEdit('${b.id}')">✏️ Ред.</button>
+            <button class="btn btn-danger btn-sm" onclick="Bookings.askDelete('${b.id}')">🗑️</button>
           </div></td>
         </tr>`;
     }).join('');
@@ -825,7 +825,7 @@ const Bookings = (() => {
 
   async function submit() {
     const user_email  =document.getElementById('b-user').value;
-    const room_id     =parseInt(document.getElementById('b-room').value);
+    const room_id     =document.getElementById('b-room').value;
     const booking_date=document.getElementById('b-date').value;
     const slot        =document.getElementById('b-slots').value.trim();
     const status      =document.getElementById('b-status').value;

@@ -22,8 +22,18 @@ async function getRooms(filters = {}) {
   } catch (e) {
     console.warn('DB failed, using static fallback:', e);
     let rooms = STATIC_ROOMS;
-    if (filters.category) rooms = rooms.filter(r => r.category.toLowerCase().includes(filters.category.toLowerCase()));
+    if (filters.category) {
+      const cats = filters.category.toLowerCase().split(',');
+      rooms = rooms.filter(r => cats.some(c => r.category.toLowerCase().includes(c)));
+    }
     if (filters.city)     rooms = rooms.filter(r => r.city === filters.city);
+    if (filters.amenities) {
+      const amens = filters.amenities.toLowerCase().split(',');
+      rooms = rooms.filter(r => {
+        const roomAmens = (r.amenities || []).map(a => a.toLowerCase());
+        return amens.every(a => roomAmens.includes(a));
+      });
+    }
     if (filters.priceMin) rooms = rooms.filter(r => r.price >= filters.priceMin);
     if (filters.priceMax) rooms = rooms.filter(r => r.price <= filters.priceMax);
     return rooms;

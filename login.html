@@ -561,7 +561,7 @@
       <div class="field-group">
         <label class="field-label">Я хочу…</label>
         <div class="role-cards">
-          <button class="role-card selected" id="roleRenter" onclick="selectRole('renter')" type="button">
+          <button class="role-card selected" id="roleTenant" onclick="selectRole('tenant')" type="button">
             <span class="role-icon">🔑</span>
             <span class="role-title">Снять офис</span>
             <span class="role-sub">Бронировать кабинеты</span>
@@ -572,7 +572,7 @@
             <span class="role-sub">Управлять объектами</span>
           </button>
         </div>
-        <input type="hidden" id="regRole" value="renter">
+        <input type="hidden" id="regRole" value="tenant">
       </div>
 
       <button class="btn-primary" id="registerBtn" onclick="doRegister()">Создать аккаунт</button>
@@ -680,7 +680,7 @@ function switchTab(tab, btn) {
 /* ─── Role select ─────────────────────────────────────────── */
 function selectRole(role) {
   document.getElementById('regRole').value = role;
-  document.getElementById('roleRenter').classList.toggle('selected', role === 'renter');
+  document.getElementById('roleTenant').classList.toggle('selected', role === 'tenant');
   document.getElementById('roleLandlord').classList.toggle('selected', role === 'landlord');
 }
 
@@ -852,7 +852,7 @@ async function doForgot() {
 
 /* ─── Demo login ──────────────────────────────────────────── */
 async function showDemoLogin() {
-  document.getElementById('loginEmail').value = 'demo@renter.kz';
+  document.getElementById('loginEmail').value = 'demo@tenant.kz';
   document.getElementById('loginPassword').value = 'password123';
   showToast('Демо-данные заполнены', 'default');
   await new Promise(r => setTimeout(r, 300));
@@ -876,6 +876,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('loginEmail').addEventListener('keydown', e => {
     if (e.key === 'Enter') document.getElementById('loginPassword').focus();
   });
+
+  // URL Params parsing
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get('tab');
+  if (tab === 'register') {
+    const btn = document.querySelectorAll('.tab-btn')[1];
+    switchTab('register', btn);
+    const role = params.get('role');
+    if (role === 'landlord') {
+      selectRole('landlord');
+    }
+  }
 });
 </script>
 </body>

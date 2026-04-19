@@ -6,7 +6,7 @@
 class WorkSpaceDB {
   constructor() {
     this.dbName = 'WorkSpaceKZ';
-    this.version = 4; // bumped to force schema upgrade
+    this.version = 5; // bumped to force schema upgrade
     this.db = null;
     this.dbReady = this._init();
   }
@@ -131,7 +131,7 @@ class WorkSpaceDB {
     const userCount = await this._count('users');
     if (userCount === 0) {
       const users = [
-        { email: 'demo@renter.kz',    password: btoa('password123'), name: 'Демо Арендатор',   role: 'renter',   phone: '+77778889900' },
+        { email: 'demo@tenant.kz',    password: btoa('password123'), name: 'Демо Арендатор',   role: 'tenant',   phone: '+77778889900' },
         { email: 'demo@landlord.kz',  password: btoa('password123'), name: 'Демо Арендодатель',role: 'landlord', phone: '+77779998800' },
         { email: 'admin@workspace.kz',password: btoa('admin123'),    name: 'Администратор',    role: 'admin',    phone: '+77051234567' },
       ];
@@ -145,8 +145,8 @@ class WorkSpaceDB {
     if (bookingCount === 0) {
       const today = new Date().toISOString().slice(0, 10);
       const bookings = [
-        { userEmail: 'demo@renter.kz', roomId: 'al1', date: today,       slots: '10:00,11:00', total: 2400, status: 'confirmed' },
-        { userEmail: 'demo@renter.kz', roomId: 'al3', date: '2026-04-25', slots: '14:00',       total: 1500, status: 'confirmed' },
+        { userEmail: 'demo@tenant.kz', roomId: 'al1', date: today,       slots: '10:00,11:00', total: 2400, status: 'confirmed' },
+        { userEmail: 'demo@tenant.kz', roomId: 'al3', date: '2026-04-25', slots: '14:00',       total: 1500, status: 'confirmed' },
       ];
       for (const b of bookings) {
         await this._add('bookings', b);
@@ -158,8 +158,18 @@ class WorkSpaceDB {
 
   async getRooms(filters = {}) {
     let rooms = await this._getAll('rooms');
-    if (filters.category) rooms = rooms.filter(r => r.category.toLowerCase().includes(filters.category.toLowerCase()));
+    if (filters.category) {
+      const cats = filters.category.toLowerCase().split(',');
+      rooms = rooms.filter(r => cats.some(c => r.category.toLowerCase().includes(c)));
+    }
     if (filters.city)     rooms = rooms.filter(r => r.city === filters.city);
+    if (filters.amenities) {
+      const amens = filters.amenities.toLowerCase().split(',');
+      rooms = rooms.filter(r => {
+        const roomAmens = (r.amenities || []).map(a => a.toLowerCase());
+        return amens.every(a => roomAmens.includes(a));
+      });
+    }
     if (filters.priceMin) rooms = rooms.filter(r => r.price >= Number(filters.priceMin));
     if (filters.priceMax) rooms = rooms.filter(r => r.price <= Number(filters.priceMax));
     if (filters.search)   rooms = rooms.filter(r => r.title.toLowerCase().includes(filters.search.toLowerCase()));
