@@ -1,7 +1,7 @@
 {
   "name": "workspace-kz-backend",
   "version": "1.0.0",
-  "description": "WorkSpace.kz API - PostgreSQL backend",
+  "description": "WorkSpace.kz API - MongoDB backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,12 +9,12 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.12.0"
+    "mongodb": "^6.5.0",
+    "mongoose": "^8.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
