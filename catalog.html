@@ -17,11 +17,14 @@
   </div>
 </header>
 
-<main style="display: flex; align-items: flex-start; gap: 2vw; width: 100%;">
+<main style="display: flex; align-items: flex-start; gap: 2vw; width: 100%;" id="catalogMain">
   <!-- Filters Sidebar -->
-  <div style="position: sticky; top: 80px; width: 320px; height: fit-content; padding: 2rem 0;">
+  <div id="filtersSidebar" style="position: sticky; top: 80px; width: 320px; height: fit-content; padding: 2rem 0; flex-shrink: 0;">
     <div class="page-card" style="padding: 2rem;">
-      <h3 style="margin-bottom: 1.5rem;">Фильтры</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <h3 style="margin:0;">Фильтры</h3>
+        <button id="filtersCloseBtn" onclick="toggleFilters()" style="display:none;background:none;border:none;color:var(--tx2);font-size:1.4rem;cursor:pointer;line-height:1;">×</button>
+      </div>
       
       <!-- Price -->
       <div class="field-group">
@@ -65,23 +68,23 @@
   </div>
 
   <!-- Results -->
-  <div style="flex: 1; padding-left: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div style="flex: 1; min-width: 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
       <div>
         <h1 style="margin: 0; font-size: 2rem;">Каталог кабинетов</h1>
         <div id="resultsCount" style="color: var(--tx2); font-size: 1.1rem;">147 объявлений</div>
       </div>
-      <div style="display: flex; gap: 1rem;">
-        <select id="sortSelect" style="padding: 0.75rem; border: 1px solid var(--bd); border-radius: var(--r-sm); background: var(--bg3); color: var(--tx);">
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <!-- Mobile filter toggle -->
+        <button id="filterToggleBtn" onclick="toggleFilters()" style="display:none;padding:0.75rem 1rem;border:1px solid var(--bd);border-radius:var(--r-sm);background:var(--bg3);color:var(--tx);font-size:0.85rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;">
+          🔧 Фильтры
+        </button>
+        <select id="sortSelect" style="padding: 0.75rem; border: 1px solid var(--bd); border-radius: var(--r-sm); background: var(--bg3); color: var(--tx); font-family:'DM Sans',sans-serif;">
           <option>По релевантности</option>
           <option>По цене (мин→макс)</option>
           <option>По рейтингу</option>
           <option>Новизна</option>
         </select>
-        <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border: 1px solid var(--bd); border-radius: var(--r-sm);">
-          <button id="viewGrid" class="view-btn active">🗂️</button>
-          <button id="viewList">📄</button>
-        </div>
       </div>
     </div>
 
@@ -104,7 +107,29 @@
 <script src="auth.js" defer></script>
 <script src="data.js"></script>
 <script src="main.js" defer data-page="catalog"></script>
+<style>
+@media (max-width: 900px) {
+  #catalogMain { flex-direction: column !important; }
+  #filtersSidebar {
+    position: static !important;
+    width: 100% !important;
+    padding: 0 !important;
+    display: none;
+  }
+  #filtersSidebar.open { display: block; }
+  #filterToggleBtn { display: flex !important; align-items: center; gap: 0.4rem; }
+  #filtersCloseBtn { display: block !important; }
+}
+@media (max-width: 600px) {
+  #catalogMain > div:last-child { padding-left: 0 !important; }
+  #catalogGrid { grid-template-columns: 1fr !important; }
+}
+</style>
 <script>
+function toggleFilters() {
+  document.getElementById('filtersSidebar').classList.toggle('open');
+}
+
 let catalogFilters = {};
 
 async function loadCatalog() {

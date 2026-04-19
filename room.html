@@ -24,6 +24,7 @@
       text-align: center;
       cursor: pointer;
       transition: all 0.15s;
+      min-height: 44px;
     }
     .slot-btn:hover:not(.booked):not(.loading-slots) { border-color: var(--accent); background: rgba(200,255,87,0.08); }
     .slot-btn.selected  { border-color: var(--accent); background: rgba(200,255,87,0.15); color: var(--accent); }
@@ -33,6 +34,28 @@
     .review-card { padding: 1.5rem; }
     .stars { color: var(--ok); }
     #roomMap { height: 300px; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--bd); }
+
+    /* ── Room page mobile ── */
+    @media (max-width: 900px) {
+      #roomGrid {
+        grid-template-columns: 1fr !important;
+        padding: 1rem !important;
+        gap: 1.5rem !important;
+      }
+      /* Booking panel: un-sticky, move to bottom of flow */
+      #roomGrid > div:last-child {
+        position: static !important;
+        order: 3;
+      }
+      #photoCarousel { height: 260px !important; }
+      #photoThumbs img { width: 64px !important; height: 48px !important; }
+    }
+    @media (max-width: 600px) {
+      #photoCarousel { height: 220px !important; border-radius: 12px !important; }
+      #prevBtn, #nextBtn { width: 36px !important; height: 36px !important; font-size: 1rem !important; }
+      .slots-wrap { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; }
+      .slot-btn { min-height: 48px; font-size: 0.88rem; }
+    }
   </style>
 </head>
 <body>

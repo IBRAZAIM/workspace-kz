@@ -103,15 +103,26 @@ async function initAuth() {
 
 // ── Rooms ──────────────────────────────────────────────────────
 async function getRooms(filters = {}) {
-  const cleaned = Object.fromEntries(
-    Object.entries(filters).filter(([, v]) => v !== '' && v != null)
-  );
-  const params = new URLSearchParams(cleaned).toString();
-  return apiCall(`/rooms${params ? '?' + params : ''}`);
+  try {
+    const cleaned = Object.fromEntries(
+      Object.entries(filters).filter(([, v]) => v !== '' && v != null)
+    );
+    const params = new URLSearchParams(cleaned).toString();
+    return await apiCall(`/rooms${params ? '?' + params : ''}`);
+  } catch (err) {
+    console.warn('Backend unavailable, using static rooms:', err.message);
+    return window.STATIC_ROOMS || [];
+  }
 }
 
 async function getRoom(id) {
-  return apiCall(`/rooms/${id}`);
+  try {
+    return await apiCall(`/rooms/${id}`);
+  } catch (err) {
+    console.warn('Backend unavailable, finding in static rooms:', err.message);
+    const rooms = window.STATIC_ROOMS || [];
+    return rooms.find(r => String(r.id) === String(id)) || rooms[0] || null;
+  }
 }
 
 async function getAvailability(roomId, date) {
