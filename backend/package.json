@@ -1,7 +1,7 @@
 {
   "name": "workspace-kz-backend",
   "version": "1.0.0",
-  "description": "WorkSpace.kz API - MongoDB backend",
+  "description": "WorkSpace.kz API - SQLite backend (SteakHouse style)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,9 +13,12 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
-    "sql.js": "^1.8.0"
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.4"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

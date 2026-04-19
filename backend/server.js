@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const db = require('./db-sqlite.js');
+const db = require('./db.js');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -162,14 +162,14 @@ app.get('/api/bookings', auth, async (req, res) => {
 });
 
 async function start() {
-  await db.connect();
-  db.initTables();
-  db.seedAdmin();
-  db.seedRooms();
+  // db.js auto-inits tables/seeds on import
   app.listen(PORT, () => {
     console.log(`✅ Backend: http://localhost:${PORT}`);
+    console.log('Admin: admin@workspace.kz / admin1234');
   });
 }
+
+
 
 start().catch(console.error);
 

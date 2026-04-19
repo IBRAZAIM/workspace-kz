@@ -195,9 +195,14 @@ function makeClient() {
   };
 }
 
+function getDB() {
+  return db;
+}
+
 module.exports = {
   query: (sql, params) => Promise.resolve(runQuery(sql, params)),
   pool: {
     connect: () => Promise.resolve(makeClient()),
   },
+  getDB
 };

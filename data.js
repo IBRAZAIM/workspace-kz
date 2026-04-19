@@ -1,14 +1,14 @@
 // WorkSpace.kz - Data Utils & Static Fallback
 // Used by main.js for search/filtering/display
 
-// Static fallback rooms (if DB unavailable)
+// Emergency static fallback (DB primary - SteakHouse style)
 const STATIC_ROOMS = [
   { id: 1, title: 'Психологический кабинет', city: 'Алматы', district: 'Алмалинский', category: 'психолог', price: 1200, amenities: ['Wi-Fi', 'Проектор'], rating: 4.9, img: 'https://images.unsplash.com/photo-1574637605482-66bce731df2f?w=400&h=240&fit=crop' },
   { id: 2, title: 'Репетиторская', city: 'Астана', district: 'Есильский', category: 'репетитор', price: 900, amenities: ['Wi-Fi'], rating: 4.7, img: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=400&h=240&fit=crop' },
   { id: 3, title: 'Совещательная', city: 'Алматы', district: 'Бостандыкский', category: 'совещание', price: 1500, amenities: ['Wi-Fi', 'Проектор', 'Парковка'], rating: 4.8, img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=240&fit=crop' },
   { id: 4, title: 'IT-студия', city: 'Шымкент', district: 'центр', category: 'IT', price: 1100, amenities: ['Wi-Fi', 'Кофе'], rating: 4.6, img: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=400&h=240&fit=crop' },
   { id: 5, title: 'Юридическая консультация', city: 'Алматы', district: 'Ауэзовский', category: 'юрист', price: 1300, amenities: ['Wi-Fi', 'Парковка'], rating: 5.0, img: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&h=240&fit=crop' }
-  // More can be added...
+// Static minimal - use API/DB primary
 ];
 
 let currentRooms = [];
