@@ -292,24 +292,26 @@
 <div class="modal-overlay" id="userModal">
   <div class="modal">
     <div class="modal-title" id="userModalTitle">Добавить пользователя</div>
-    <div class="field-group"><label class="field-label">Имя *</label><input class="field" id="u-name" placeholder="Иван Иванов"></div>
-    <div class="field-group"><label class="field-label">Email *</label><input class="field" id="u-email" type="email" placeholder="ivan@example.com"></div>
-    <div class="field-group"><label class="field-label">Телефон</label><input class="field" id="u-phone" placeholder="+7 777 000 0000"></div>
-    <div class="field-group"><label class="field-label">Роль *</label>
-      <select class="field" id="u-role">
-        <option value="tenant">Арендатор</option>
-        <option value="landlord">Арендодатель</option>
-        <option value="admin">Администратор</option>
-      </select>
-    </div>
-    <div class="field-group" id="u-pass-group">
-      <label class="field-label">Пароль * <span style="color:var(--tx3);font-weight:400;">(мин. 8 символов)</span></label>
-      <input class="field" id="u-password" type="password" placeholder="••••••••">
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-green" id="userSaveBtn" onclick="Users.submit()">Сохранить</button>
-      <button class="btn btn-ghost" onclick="closeModal('userModal')">Отмена</button>
-    </div>
+    <form onsubmit="event.preventDefault(); Users.submit();">
+      <div class="field-group"><label class="field-label">Имя *</label><input class="field" id="u-name" placeholder="Иван Иванов"></div>
+      <div class="field-group"><label class="field-label">Email *</label><input class="field" id="u-email" type="email" placeholder="ivan@example.com" autocomplete="username"></div>
+      <div class="field-group"><label class="field-label">Телефон</label><input class="field" id="u-phone" placeholder="+7 777 000 0000"></div>
+      <div class="field-group"><label class="field-label">Роль *</label>
+        <select class="field" id="u-role">
+          <option value="tenant">Арендатор</option>
+          <option value="landlord">Арендодатель</option>
+          <option value="admin">Администратор</option>
+        </select>
+      </div>
+      <div class="field-group" id="u-pass-group">
+        <label class="field-label">Пароль * <span style="color:var(--tx3);font-weight:400;">(мин. 8 символов)</span></label>
+        <input class="field" id="u-password" type="password" placeholder="••••••••" autocomplete="new-password">
+      </div>
+      <div class="modal-actions">
+        <button type="submit" class="btn btn-green" id="userSaveBtn">Сохранить</button>
+        <button type="button" class="btn btn-ghost" onclick="closeModal('userModal')">Отмена</button>
+      </div>
+    </form>
   </div>
 </div>
 

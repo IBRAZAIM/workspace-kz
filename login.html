@@ -483,12 +483,12 @@
     </div>
 
     <!-- ── LOGIN PANEL ─────────────────────────────────── -->
-    <div id="loginPanel" class="tab-panel active">
+    <form id="loginPanel" class="tab-panel active" onsubmit="event.preventDefault(); doLogin();">
 
       <div class="field-group" id="fg-loginEmail">
         <label class="field-label" for="loginEmail">Email</label>
         <input class="field" id="loginEmail" type="email" placeholder="name@example.com"
-               oninput="validateEmail(this, 'fg-loginEmail')" autocomplete="email">
+               oninput="validateEmail(this, 'fg-loginEmail')" autocomplete="username">
         <p class="field-error" id="loginEmail-err">Введите корректный email</p>
       </div>
 
@@ -499,8 +499,7 @@
         </label>
         <div class="field-wrap">
           <input class="field has-icon" id="loginPassword" type="password"
-                 placeholder="Введите пароль" autocomplete="current-password"
-                 onkeydown="if(event.key==='Enter') doLogin()">
+                 placeholder="Введите пароль" autocomplete="current-password">
           <button class="field-icon-btn" onclick="togglePw('loginPassword', this)" type="button" aria-label="Показать пароль">
             <svg id="eye-loginPassword" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1 8C1 8 3.5 3 8 3s7 5 7 5-2.5 5-7 5S1 8 1 8z" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
           </button>
@@ -508,7 +507,7 @@
         <p class="field-error" id="loginPassword-err">Введите пароль</p>
       </div>
 
-      <button class="btn-primary" id="loginBtn" onclick="doLogin()">Войти в кабинет</button>
+      <button type="submit" class="btn-primary" id="loginBtn">Войти в кабинет</button>
 
       <div class="divider"><div class="divider-line"></div><span class="divider-text">Демо-доступ</span><div class="divider-line"></div></div>
 
