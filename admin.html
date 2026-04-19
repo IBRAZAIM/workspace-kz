@@ -188,7 +188,7 @@
     <span id="headerUser" style="font-size:0.85rem;color:var(--tx2);"></span>
     <a href="index.html" class="header-back">Главная</a>
     <a href="profile.html" class="header-back">Профиль</a>
-    <a href="#" onclick="AuthManager.logout();return false" class="header-back">Выход</a>
+    <a href="#" onclick="Auth.logout(); window.location.href='index.html'; return false" class="header-back">Выход</a>
   </div>
 </header>
 
@@ -864,11 +864,11 @@ const Bookings = (() => {
 
 // ─── INIT ─────────────────────────────────────────────────────────
 async function init() {
-  await WorkSpaceDB.dbReady;
+  await DB.ready;
   
-  if (!AuthManager.isLoggedIn()) { window.location.href='login.html'; return; }
-  const user=AuthManager.getUser();
-  if (user.role!=='admin') { window.location.href='dashboard.html'; return; }
+  if (!Auth.isLoggedIn()) { window.location.href='login.html'; return; }
+  const user = Auth.getUser();
+  if (user.role !== 'admin') { window.location.href='dashboard.html'; return; }
 
   document.getElementById('headerUser').textContent=user.name||user.email;
 

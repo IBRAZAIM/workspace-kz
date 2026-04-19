@@ -228,7 +228,7 @@ let map;
 // ── Load room ─────────────────────────────────────────────────
 async function loadRoom() {
   try {
-    await WorkSpaceDB.dbReady;
+    await DB.ready;
     window.currentRoom = await window.api.getRoom(roomId);
   } catch {
     try {
@@ -267,7 +267,7 @@ async function loadRoom() {
   document.getElementById('bookDate').min   = today;
   await loadSlots();
 
-  updateNavbar(AuthManager.currentUser);
+  updateNavbar(Auth.currentUser);
 }
 
 // ── Photo gallery ─────────────────────────────────────────────
@@ -394,14 +394,14 @@ function showPaymentStep() {
     return;
   }
   
-  if (!AuthManager.isLoggedIn()) {
-    Utils.showToast('Необходимо войти', 'error');
-    setTimeout(() => window.location.href = `login.html?redirect=room.html?id=${roomId}`, 1000);
+  if (!Auth.isLoggedIn()) {
+    Utils.showToast('Необходимо войти в аккаунт', 'error');
+    setTimeout(() => window.location.href = `login.html?redirect=room.html%3Fid%3D${roomId}`, 1200);
     return;
   }
 
   const price = (window.currentRoom?.price || 0) * selectedSlots.length;
-  const user = AuthManager.currentUser;
+  const user  = Auth.currentUser;
   
   document.getElementById('modalTitle').textContent = 'Подтверждение брони';
   document.getElementById('modalBody').innerHTML = `
@@ -429,7 +429,7 @@ async function confirmBooking() {
   btn.textContent = 'Оформление...';
   
   const price = (window.currentRoom?.price || 0) * selectedSlots.length;
-  const user = AuthManager.currentUser;
+  const user  = Auth.currentUser;
   
   try {
     await window.api.addBooking({

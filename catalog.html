@@ -142,7 +142,7 @@ function toggleFilters() {
 let catalogFilters = null;
 
 async function loadCatalog() {
-  updateNavbar(AuthManager?.currentUser || null);
+  updateNavbar(Auth?.currentUser || null);
   document.getElementById('catalogLoader').style.display = 'flex';
   document.getElementById('catalogGrid').style.display = 'none';
 
@@ -150,11 +150,11 @@ async function loadCatalog() {
     catalogFilters = {};
     const params = new URLSearchParams(window.location.search);
     if (params.get('city')) catalogFilters.city = params.get('city');
-    if (params.get('cat')) catalogFilters.category = params.get('cat');
+    if (params.get('cat'))  catalogFilters.category = params.get('cat');
   }
 
   try {
-    await WorkSpaceDB.dbReady;
+    await DB.ready;
     const rooms = await Data.getRooms(catalogFilters);
     displayCatalogRooms(rooms);
     document.getElementById('resultsCount').textContent = `${rooms.length} объявлений`;

@@ -1,6 +1,9 @@
-// WorkSpace.kz — Main Logic
+/**
+ * WorkSpace.kz — Main Logic
+ * Depends on: db.js (window.DB), auth.js (window.Auth = window.AuthManager), data.js (window.Data)
+ */
 
-/* ── Toast ──────────────────────────────────────────────── */
+/* ── Toast ───────────────────────────────────────────────── */
 window.Utils = {
   showToast(msg, type = 'default') {
     let toast = document.getElementById('toast');
@@ -14,21 +17,22 @@ window.Utils = {
     toast.textContent = msg;
     toast.className = `toast ${type}`;
     requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
-    toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+    toast._timer = setTimeout(() => toast.classList.remove('show'), 3200);
   }
 };
 
-/* ── Navbar ─────────────────────────────────────────────── */
+/* ── Navbar ──────────────────────────────────────────────── */
 function updateNavbar(user) {
   const navRight = document.getElementById('navRight') || document.querySelector('.nav-right');
   if (!navRight) return;
 
   if (user) {
-    const name = user.name ? user.name.split(' ')[0] : user.email.split('@')[0];
+    const name = user.name ? user.name.split(' ')[0] : (user.email || '').split('@')[0];
+    const dest = (user.role === 'admin') ? 'admin.html' : 'dashboard.html';
     navRight.innerHTML = `
       <span style="font-size:0.85rem;color:var(--tx2);">${name}</span>
-      <a href="dashboard.html" class="header-back">Кабинет</a>
-      <a href="#" onclick="AuthManager.logout(); window.location.reload();" class="header-back">Выход</a>
+      <a href="${dest}" class="header-back">Кабинет</a>
+      <a href="#" onclick="Auth.logout();window.location.href='index.html';" class="header-back">Выход</a>
     `;
   } else {
     navRight.innerHTML = '<a href="login.html" class="header-back">Войти</a>';
@@ -50,23 +54,22 @@ function toggleFilters() {
 
 /* ── Modal ───────────────────────────────────────────────── */
 function closeModal(e) {
-  if (e) e.stopPropagation();
+  if (e && e.target !== document.getElementById('overlay')) return;
   document.getElementById('overlay')?.classList.remove('open');
 }
 
-/* ── Filter tabs ─────────────────────────────────────────── */
-window.toggleCat = function(btn, cat) {
+/* ── Filter tabs (index page) ────────────────────────────── */
+window.toggleCat = function (btn, cat) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  // Reload cards with filter
   if (typeof loadIndexCards === 'function') loadIndexCards(cat);
 };
 
-window.toggleAmenity = function(btn) {
+window.toggleAmenity = function (btn) {
   btn.classList.toggle('on');
 };
 
-/* ── Index: cards ────────────────────────────────────────── */
+/* ── Index: load room cards ──────────────────────────────── */
 async function loadIndexCards(categoryFilter = '') {
   const loader = document.getElementById('cardsLoader');
   const grid   = document.getElementById('cardsGrid');
@@ -77,9 +80,9 @@ async function loadIndexCards(categoryFilter = '') {
   grid.style.display   = 'none';
 
   try {
-    await WorkSpaceDB.dbReady;
+    await DB.ready;
     const filters = categoryFilter ? { category: categoryFilter } : {};
-    const rooms = await Data.getRooms(filters);
+    const rooms   = await Data.getRooms(filters);
 
     grid.innerHTML = rooms.map(room => `
       <div class="space-card" onclick="window.location.href='room.html?id=${room.id}'" style="cursor:pointer;">
@@ -96,7 +99,7 @@ async function loadIndexCards(categoryFilter = '') {
             <div style="color:var(--tx2);">${room.city}${room.district ? ', ' + room.district : ''}</div>
           </div>
           <div style="display:flex;flex-wrap:wrap;gap:0.4rem;">
-            ${(room.amenities || []).slice(0,3).map(a => `<span class="badge">${a}</span>`).join('')}
+            ${(room.amenities || []).slice(0, 3).map(a => `<span class="badge">${a}</span>`).join('')}
             ${(room.amenities || []).length > 3 ? '<span class="badge">+ещё</span>' : ''}
           </div>
         </div>
@@ -108,29 +111,24 @@ async function loadIndexCards(categoryFilter = '') {
     if (label) label.textContent = `Доступные кабинеты (${rooms.length})`;
   } catch (e) {
     loader.innerHTML = `<span style="color:var(--err);">Ошибка загрузки: ${e.message}</span>`;
-    console.error('Cards error:', e);
+    console.error('loadIndexCards error:', e);
   }
 }
 
 /* ── Page init ───────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
-  // Update navbar immediately with cached user
-  updateNavbar(AuthManager.currentUser);
+  // Navbar shows instantly from localStorage cache
+  updateNavbar(Auth.currentUser);
 
-  // Wait for DB then re-update (in case of async auth check)
-  await WorkSpaceDB.dbReady;
+  // Wait for DB, then re-render navbar (catches async auth state)
+  try {
+    await DB.ready;
+  } catch (e) {
+    console.warn('DB init error:', e);
+  }
+  updateNavbar(Auth.currentUser);
 
-  // Detect page by body data-attribute or script element
-  const bodyPage = document.body.dataset.page;
-  const scriptEl = document.querySelector('script[data-page]');
-  const page = bodyPage || (scriptEl ? scriptEl.dataset.page : '');
-
-  if (page === 'index')  { await loadIndexCards(); }
-  if (page === 'login')  { /* Login handlers are inline */ }
-  if (page === 'catalog'){ initCatalog(); }
+  // Page-specific initialization
+  const page = document.body.dataset.page || '';
+  if (page === 'index') await loadIndexCards();
 });
-
-async function initCatalog() {
-  const p = new URLSearchParams(window.location.search);
-  // catalog.html has its own inline logic
-}

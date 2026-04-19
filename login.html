@@ -770,8 +770,8 @@ async function doLogin() {
   setStatus('loading', 'Проверка учётных данных…');
 
   try {
-    if (typeof AuthManager !== 'undefined') {
-      const user = await AuthManager.login(email, password);
+    if (typeof Auth !== 'undefined') {
+      const user = await Auth.login(email, password);
       let redirect = new URLSearchParams(window.location.search).get('redirect');
       if (!redirect || redirect === 'dashboard.html') {
         redirect = user.role === 'admin' ? 'admin.html' : 'dashboard.html';
@@ -815,8 +815,8 @@ async function doRegister() {
   setStatus('loading', 'Создание аккаунта…');
 
   try {
-    if (typeof AuthManager !== 'undefined') {
-      const user = await AuthManager.register(data);
+    if (typeof Auth !== 'undefined') {
+      const user = await Auth.register(data);
       window.location.href = user.role === 'admin' ? 'admin.html' : 'dashboard.html';
     } else {
       await new Promise(r => setTimeout(r, 900));
@@ -861,12 +861,12 @@ async function showDemoLogin() {
 
 /* ─── DB init ─────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', async () => {
-  if (typeof WorkSpaceDB !== 'undefined') {
+  if (typeof DB !== 'undefined') {
     try {
-      await WorkSpaceDB.dbReady;
+      await DB.ready;
       setStatus('ready', 'База данных готова');
     } catch {
-      setStatus('loading', 'Офлайн-режим — демо работает');
+      setStatus('error', 'Офлайн-режим — демо работает');
     }
   } else {
     setTimeout(() => setStatus('ready', 'База данных готова'), 700);

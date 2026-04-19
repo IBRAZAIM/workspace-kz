@@ -1,81 +1,99 @@
-// WorkSpace.kz — Auth Manager (LocalStorage + IndexedDB)
+/**
+ * WorkSpace.kz — Auth Manager
+ * Exposed as window.Auth (no class/instance name collision)
+ */
 
-class _AuthManager {
-  constructor() {
-    this.tokenKey = 'ws_token';
-    this.currentUser = this._loadUser();
-  }
+(function () {
+  'use strict';
 
-  _loadUser() {
+  const TOKEN_KEY = 'ws_auth_token';
+
+  function loadUser() {
     try {
-      const token = localStorage.getItem(this.tokenKey);
-      if (!token) return null;
-      return JSON.parse(atob(token));
+      const raw = localStorage.getItem(TOKEN_KEY);
+      if (!raw) return null;
+      return JSON.parse(atob(raw));
     } catch {
-      localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem(TOKEN_KEY);
       return null;
     }
   }
 
-  _saveUser(user) {
-    const payload = { email: user.email, role: user.role, name: user.name, phone: user.phone };
-    localStorage.setItem(this.tokenKey, btoa(JSON.stringify(payload)));
-    this.currentUser = payload;
+  function saveUser(user) {
+    const payload = {
+      email: user.email,
+      name:  user.name  || '',
+      phone: user.phone || '',
+      role:  user.role  || 'tenant',
+    };
+    localStorage.setItem(TOKEN_KEY, btoa(JSON.stringify(payload)));
+    window.Auth.currentUser = payload;
     return payload;
   }
 
-  // Alias for compatibility
-  getUser() {
-    return this.currentUser;
-  }
+  window.Auth = {
+    currentUser: loadUser(),
 
-  getCurrentUser() {
-    return this.currentUser;
-  }
+    /** Login: verify against IndexedDB, save token */
+    async login(email, password) {
+      if (!email || !password) throw new Error('Введите email и пароль');
+      await DB.ready;
+      const user = await DB.getUser(email.trim().toLowerCase());
+      if (!user) throw new Error('Пользователь не найден. Проверьте email.');
+      const ok = user.password === btoa(password) || user.password === password;
+      if (!ok) throw new Error('Неверный пароль');
+      return saveUser(user);
+    },
 
-  async login(email, password) {
-    // api.login throws on wrong credentials
-    const user = await window.api.login(email, password);
-    return this._saveUser(user);
-  }
+    /** Register: create user in IndexedDB, save token */
+    async register(data) {
+      if (!data.email || !data.password) throw new Error('Заполните обязательные поля');
+      await DB.ready;
+      const email = data.email.trim().toLowerCase();
+      const existing = await DB.getUser(email);
+      if (existing) throw new Error('Пользователь с таким email уже существует');
 
-  async register(data) {
-    await WorkSpaceDB.dbReady;
-    const existing = await WorkSpaceDB.getUser(data.email);
-    if (existing) throw new Error('Пользователь уже существует');
+      const user = {
+        email,
+        password: btoa(data.password),
+        name:  data.name  || '',
+        phone: data.phone || '',
+        role:  data.role  || 'tenant',
+      };
+      await DB.putUser(user);
+      return saveUser(user);
+    },
 
-    const user = {
-      email:    data.email,
-      password: btoa(data.password),
-      name:     data.name  || '',
-      phone:    data.phone || '',
-      role:     data.role  || 'renter',
-    };
-    await WorkSpaceDB.addUser(user);
-    return this._saveUser(user);
-  }
+    /** Logout */
+    logout() {
+      localStorage.removeItem(TOKEN_KEY);
+      window.Auth.currentUser = null;
+    },
 
-  logout() {
-    localStorage.removeItem(this.tokenKey);
-    this.currentUser = null;
-  }
+    isLoggedIn() { return !!window.Auth.currentUser; },
+    isAdmin()    { return window.Auth.currentUser?.role === 'admin'; },
 
-  isLoggedIn() {
-    return !!this.currentUser;
-  }
+    /* Aliases for legacy code */
+    getUser()        { return window.Auth.currentUser; },
+    getCurrentUser() { return window.Auth.currentUser; },
 
-  isAdmin() {
-    return this.currentUser?.role === 'admin';
-  }
-}
+    /** Persist profile changes */
+    updateCurrentUser(patch) {
+      if (!window.Auth.currentUser) return;
+      Object.assign(window.Auth.currentUser, patch);
+      saveUser(window.Auth.currentUser);
+    },
+  };
 
-// Global singleton
-window.AuthManager = new _AuthManager();
+  /* Keep currentUser in sync across browser tabs */
+  window.addEventListener('storage', (e) => {
+    if (e.key === TOKEN_KEY) {
+      window.Auth.currentUser = loadUser();
+      if (typeof updateNavbar === 'function') updateNavbar(window.Auth.currentUser);
+    }
+  });
 
-// Keep currentUser fresh across tabs
-window.addEventListener('storage', (e) => {
-  if (e.key === window.AuthManager.tokenKey) {
-    window.AuthManager.currentUser = window.AuthManager._loadUser();
-    if (typeof updateNavbar === 'function') updateNavbar(window.AuthManager.currentUser);
-  }
-});
+  /* Legacy alias — all existing code that says "AuthManager.xxx" still works */
+  window.AuthManager = window.Auth;
+
+})();
